@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#
+# Non-python stuff
+#
+handout_documents/
+
