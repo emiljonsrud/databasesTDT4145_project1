@@ -1,0 +1,15 @@
+// header
+erdiagram NorwegianRail
+
+notation = default
+
+entity RailwayStation{
+    Name: VARCHAR(255) key
+    Height: integer
+}
+
+entity TrackSubSection {
+    StartStation: VARCHAR(255) partial-key
+    EndStation: VARCHAR(255) partial-key
+    
+}
