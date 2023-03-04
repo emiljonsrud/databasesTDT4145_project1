@@ -40,14 +40,18 @@ relationship Ticket {
     CustomerOrder[1..1] -> TrainRoute[0..N]
 }
 
-entity TrainSett {
-    SettID key // ?
+weak entity Car{
+    CarrigeNo partial-key // ?
 }
-relationship RouteSetup {
-    TrainRoute[1..1] -> TrainSett[0..N]
+weak relationship CarSetup {
+    TrainRoute[1..N] -> Car[0..N]
 }
-
-
+entity SleepCar extends Car {
+    CarrigeNo key
+}
+entity SitCar extends Car {
+    CarrigeNo key
+}
 /*
 entity CarArrangement {
     none
