@@ -3,13 +3,59 @@ erdiagram NorwegianRail
 
 notation = default
 
+entity Customer {
+    CustomerID key
+    Name: VARCHAR(255)
+    Email: VARCHAR(30)
+    PhoneNo: integer multivalued
+}
+entity CustomerOrder {
+    OrderID key
+    OrderDate
+    OrderTime
+    SeatReservations     
+}
+relationship Order {
+    Customer[0..N] -> CustomerOrder[1..1]
+}
+
+entity TrainRoute {
+    Name: VARCHAR(255) key
+    // Runs once on a set of week days
+    Operator
+}
 entity RailwayStation{
     Name: VARCHAR(255) key
-    Height: integer
+    Height: integer //dm
+}
+weak entity ArrivalAndDeparture {
+    ArrivalTime partial-key
+    DepartureTime partial-key
+}
+relationship StopsAt {
+    TrainRoute[1..N] -> RailwayStation[1..N] // vil egt ha (2, N)
+    -> ArrivalAndDeparture[1..1]
+}
+relationship Ticket {
+    CustomerOrder[1..1] -> TrainRoute[0..N]
+}
+
+entity TrainSett {
+    SettID key // ?
+}
+relationship RouteSetup {
+    TrainRoute[1..1] -> TrainSett[0..N]
+}
+
+
+/*
+entity CarArrangement {
+    none
 }
 
 entity TrackSubSection {
-    StartStation: VARCHAR(255) partial-key
-    EndStation: VARCHAR(255) partial-key
+    StartStation: VARCHAR(255) key
+    EndStation: VARCHAR(255) key
     
 }
+*/
