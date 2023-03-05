@@ -24,10 +24,34 @@ entity TrainRoute {
     // Runs once on a set of week days
     Operator
 }
+entity Operator {
+    Name: VARCHAR(255) key
+}
+relationship Operates {
+    Operator[0..N] -> TrainRoute[1..N]
+}
 entity RailwayStation{
     Name: VARCHAR(255) key
     Height: integer //dm
 }
+entity TrackSection {
+    Name: VARCHAR(255) key
+}
+entity TrackSubSection {
+    Station key
+}
+relationship Drives {
+    TrainRoute[1..1] -> TrackSection[1..1]
+}
+relationship Covers {
+    TrackSection[1..N] -> TrackSubSection[0..N]
+}
+relationship StartsAt {
+    TrackSubSection[1..1] -> RailwayStation[1..1]
+}
+
+
+
 weak entity ArrivalAndDeparture {
     ArrivalTime partial-key
     DepartureTime partial-key
