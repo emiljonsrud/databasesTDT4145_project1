@@ -11,4 +11,6 @@
     - OrderID -> NoOfTickets
     - ???
 - Ticket(***Train***, ***Seat***, *Order*)
-  - 
+- Train(**Day**, *TrainRoute*)
+- Seat(**SeatNo**, *Car*)
+- CarInTrain(**CarNo**, *CarType*, *TrainRoute*)
