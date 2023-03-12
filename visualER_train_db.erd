@@ -91,7 +91,9 @@
         <attributes/>
     </diamond>
     <diamond id="38" is_weak="false" name="Ticket" x="1102" y="690">
-        <attributes/>
+        <attributes>
+            <attribute name="IsBed" type="Boolean"/>
+        </attributes>
     </diamond>
     <diamond id="51" is_weak="false" name="EndsAt" x="796" y="220">
         <attributes/>
@@ -162,7 +164,7 @@
         <connection connection_side="1" direction="1" object_id="17" relation_point_x="827" relation_point_y="291"/>
         <connection connection_side="1" direction="1" object_id="51" relation_point_x="812" relation_point_y="220"/>
     </line>
-    <line cardinality_string="(1,n)" has_u="false" id="58" is_weak="false" role="" style="0" turned="false">
+    <line cardinality_string="(0,n)" has_u="false" id="58" is_weak="false" role="" style="0" turned="false">
         <connection connection_side="0" direction="0" object_id="21" relation_point_x="631" relation_point_y="218"/>
         <connection connection_side="0" direction="0" object_id="57" relation_point_x="520" relation_point_y="216"/>
     </line>
@@ -178,7 +180,7 @@
         <connection connection_side="1" direction="1" object_id="60" relation_point_x="1002" relation_point_y="359"/>
         <connection connection_side="3" direction="1" object_id="64" relation_point_x="1003" relation_point_y="342"/>
     </line>
-    <line cardinality_string="(1,n)" has_u="false" id="66" is_weak="false" role="" style="0" turned="false">
+    <line cardinality_string="(0,n)" has_u="false" id="66" is_weak="false" role="" style="0" turned="false">
         <connection connection_side="2" direction="0" object_id="17" relation_point_x="896" relation_point_y="325"/>
         <connection connection_side="0" direction="0" object_id="64" relation_point_x="987" relation_point_y="326"/>
     </line>
@@ -190,7 +192,7 @@
         <connection connection_side="0" direction="0" object_id="67" relation_point_x="1094" relation_point_y="515"/>
         <connection connection_side="2" direction="0" object_id="68" relation_point_x="894" relation_point_y="518"/>
     </line>
-    <line cardinality_string="(1,n)" has_u="false" id="72" is_weak="false" role="" style="0" turned="false">
+    <line cardinality_string="(0,n)" has_u="false" id="72" is_weak="false" role="" style="0" turned="false">
         <connection connection_side="3" direction="1" object_id="6" relation_point_x="447" relation_point_y="542"/>
         <connection connection_side="1" direction="1" object_id="71" relation_point_x="447" relation_point_y="587"/>
     </line>
