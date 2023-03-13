@@ -5,78 +5,75 @@ CREATE TABLE TrackSection(
   StartStation VARCHAR(255) NOT NULL, 
   EndStation VARCHAR(255) NOT NULL, 
   FOREIGN KEY(StartStation) REFERENCES RailwayStation(Name) ON UPDATE CASCADE ON DELETE CASCADE,
-  FOREIGN KEY(EndStation) REFERENCES RailwayStation(name) ON UPDATE CASCADE ON DELETE CASCADE,
-  INSERT INTO TrackSubSection VALUES(StartStation, )
+  FOREIGN KEY(EndStation) REFERENCES RailwayStation(Name) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
  -- RailwayStation
 CREATE TABLE RailwayStation(
   Name VARCHAR(255) PRIMARY KEY NOT NULL, 
-  Height INT NOT NULL
+  Height DOUBLE NOT NULL
 ); 
 
 -- TrackSubSection
 CREATE TABLE TrackSubSection(
-  SectionNo INT, 
-  TrackSection VARCHAR(255) NOT NULL, 
-  Length INT, 
+  SubSectionNo INT NOT NULL, 
+  SectionName VARCHAR(255) NOT NULL, 
+  Distance INT, 
   DoubleTrack BOOL,  
   StartsAt VARCHAR(255) NOT NULL,
   EndsAt VARCHAR(255) NOT NULL, 
-  FOREIGN KEY(StartsAt) REFERENCES Station(Name), 
-  FOREIGN KEY(EndsAT) REFERENCES Station(Name), 
-  FOREIGN KEY(TrackSection) REFERENCES TrackSection(name),  
-  CONSTRAINT PK_TrackSubSection PRIMARY KEY (SectionNo, TrackSection)
+  FOREIGN KEY(StartsAt) REFERENCES Station(Name) ON UPDATE CASCADE ON DELETE CASCADE, 
+  FOREIGN KEY(EndsAT) REFERENCES Station(Name) ON UPDATE CASCADE ON DELETE CASCADE, 
+  FOREIGN KEY(SectionName) REFERENCES TrackSection(name) ON UPDATE CASCADE ON DELETE CASCADE,  
+  CONSTRAINT PK_TrackSubSection PRIMARY KEY (SubSectionNo, SectionName)
 );
 
 --  TrainRoute    
 CREATE TABLE TrainRoute(
   Name VARCHAR(255) PRIMARY KEY NOT NULL, 
   Operator VARCHAR(255), 
-  TrackName VARCHAR(255) NOT NULL, 
-  FOREIGN KEY(TrackName) REFERENCES TrackSection(Name)
+  SectionName VARCHAR(255) NOT NULL, 
+  FOREIGN KEY(SectionName) REFERENCES TrackSection(Name) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 -- WeekDay
 CREATE TABLE WeekDay(
-  Name VARCHAR(255) PRIMARY KEY NOT NULL,
+  Name VARCHAR(255) PRIMARY KEY NOT NULL
 );
 
 -- Day of Route
 CREATE TABLE DayOfRoute(
-  WeekDay VARCHAR(255),
-  TrainRoute VARCHAR(255),
-  FOREIGN KEY WeekName REFERENCES WeekDay(Name),
-  FOREIGN KEY TrainRoute REFERENCES TrainRoute(Name)
-  CONSTRAINT PK_DayOfRoute PRIMARY KEY(WeekName, TrainRoute)
-);
-
--- Ticket
-CREATE TABLE Ticket(
-  TicketNo INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
-  OrderID INT,
-  CarID INT,
-  PlaceNo INT,
-  FOREIGN KEY(OrderID) REFERENCES CustomerOrder(OrderID),
-  FOREIGN KEY(CarID, PlaceNo) REFERENCES  Placement(CarID, PlaceNo)
+  NameOfDay VARCHAR(255) NOT NULL,
+  NameOfRoute VARCHAR(255) NOT NULL,
+  FOREIGN KEY (NameOfDay ) REFERENCES WeekDay(Name) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (NameOfRoute) REFERENCES TrainRoute(Name) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT PK_DayOfRoute PRIMARY KEY(NameOfDay, NameOfRoute)
 );
 
 -- RouteStop
 CREATE TABLE RouteStop( 
-  RailwayStation VARCHAR(255), 
-  TrainRoute VARCHAR(255), 
-  FOREIGN KEY(RailwayStation) REFERENCES RailwayStation(name), 
-  FOREIGN KEY(TrainRoute) REFERENCES TrainRoute(name), 
-  CONSTRAINT PK_RouteStop PRIMARY KEY(RailwayStation, TrainRoute)
-); 
+  Station VARCHAR(255) NOT NULL, 
+  NameOfRoute VARCHAR(255) NOT NULL,
+  TimeOfDay TIME,
+  FOREIGN KEY(Station) REFERENCES RailwayStation(Name) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY(NameOfRoute) REFERENCES TrainRoute(Name) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT PK_RouteStop PRIMARY KEY(Station, NameOfRoute)
+);
 
-
--- TrainOccurance 
+-- TrainOccurance
 CREATE TABLE TrainOccurance(
-  Date DATE NOT NULL, 
-  TrainRoute VARCHAR(255) NOT NULL, 
-  FOREIGN KEY(TrainRoute) REFERENCES TrainRoute(Name), 
-  CONSTRAINT PK_TrainOccurance PRIMARY KEY(Date, TrainRoute) 
+  RunDate DATE NOT NULL,
+  NameOfRoute VARCHAR(255) NOT NULL, 
+  FOREIGN KEY(NameOfRoute) REFERENCES TrainRoute(Name) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT PK_TrainOccurance PRIMARY KEY(RunDate, NameOfRoute)
+);
+
+-- Placement
+CREATE TABLE Placement(
+  PlaceNo INT NOT NULL,
+  CarID INT NOT NULL,
+  FOREIGN KEY (CarID) REFERENCES CarInTrain(CarID) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT PK_Placement PRIMARY KEY (PlaceNo, CarID)
 );
 
 -- CarInTrain
@@ -85,46 +82,59 @@ CREATE TABLE CarInTrain(
   CarNo INT
 );
 
-
 -- ChairCar 
 CREATE TABLE ChairCar(
-  CarID INT PRIMARY KEY REFERENCES CarInTrain(CarID), 
-  NumberOfRows INT, 
-  SeatsPerRow INT
+  CarID INT NOT NULL,
+  NumOfRows INT, 
+  SeatsPerRow INT,
+  PRIMARY KEY(CarID), 
+  FOREIGN KEY (CarID) REFERENCES CarInTrain(CarID) ON UPDATE CASCADE ON DELETE CASCADE
 );
-
 
 -- SleepCar 
 CREATE TABLE SleepCar(
-  CarID INT PRIMARY KEY REFERENCES CarInTrain(CarID), 
-  CarNo INT, 
-  NumOfCompartments INT
+  CarID INT NOT NULL, 
+  NumOfCompartments INT,
+  PRIMARY KEY (CarID),
+  FOREIGN KEY (CarID) REFERENCES CarInTrain(CarID) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+-- Ticket
+CREATE TABLE Ticket(
+  TicketNo INT AUTO_INCREMENT NOT NULL,
+  OrderID INT NOT NULL,
+  CarID INT NOT NULL,
+  PlaceNo INT NOT NULL,
+  FOREIGN KEY(OrderID) REFERENCES CustomerOrder(OrderID) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY(CarID, PlaceNo) REFERENCES  Placement(CarID, PlaceNo) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT PK_Ticket PRIMARY KEY (TicketNo, OrderID)
+);
 
 -- CustomerOrder
 CREATE TABLE CustomerOrder(
-  OrderID INT PRIMARY KEY NOT NULL, 
-  OrderDate DATE, 
-  OrderTime INT, 
-  CustomerID INT NOT NULL, 
-  FOREIGN KEY(CustomerID) REFERENCES Customer(CustomerID)
+  OrderID INT NOT NULL,
+  OrderDate DATE NOT NULL,
+  OrderTime INT NOT NULL,
+  CustomerID INT NOT NULL,
+  PRIMARY KEY (OrderID),
+  FOREIGN KEY(CustomerID) REFERENCES Customer(CustomerID) ON UPDATE CASCADE ON DELETE CASCADE
 );
-
 
 -- Customer
 CREATE TABLE Customer(
-  CustomerID INT PRIMARY KEY NOT NULL, 
-  Name VARCHAR(255), 
-  Email VARCHAR(255), 
-  PhoneNO INT, 
+  CustomerID INT NOT NULL, 
+  Name VARCHAR(255) NOT NULL, 
+  Email VARCHAR(255) NOT NULL, 
+  PhoneNO INT NOT NULL, 
   RegistryID INT NOT NULL, 
-  FOREIGN KEY(RegistryID) REFERENCES CustomerRegistry(RegistryID)
+  PRIMARY KEY (CustomerID, RegistryID),
+  FOREIGN KEY(RegistryID) REFERENCES CustomerRegistry(RegistryID) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 -- CustomerRegistry
 CREATE TABLE CustomerRegistry(
-  RegistryID INT PRIMARY KEY NOT NULL
+  RegistryID INT NOT NULL,
+  PRIMARY KEY (RegistryID)
 );
 
 
