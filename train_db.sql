@@ -1,9 +1,9 @@
 -- Track Section
 CREATE TABLE TrackSection(
-  Name TEXT PRIMARY KEY NOT NULL,
+  Name VARCHAR(255) PRIMARY KEY NOT NULL,
   ElectricTracks BOOL,
-  StartStation TEXT NOT NULL, 
-  EndStation TEXT NOT NULL, 
+  StartStation VARCHAR(255) NOT NULL, 
+  EndStation VARCHAR(255) NOT NULL, 
   FOREIGN KEY(StartStation) REFERENCES RailwayStation(Name) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY(EndStation) REFERENCES RailwayStation(name) ON UPDATE CASCADE ON DELETE CASCADE,
   INSERT INTO TrackSubSection VALUES(StartStation, )
@@ -11,18 +11,18 @@ CREATE TABLE TrackSection(
 
  -- RailwayStation
 CREATE TABLE RailwayStation(
-  Name TEXT PRIMARY KEY NOT NULL, 
+  Name VARCHAR(255) PRIMARY KEY NOT NULL, 
   Height INT NOT NULL
 ); 
 
 -- TrackSubSection
 CREATE TABLE TrackSubSection(
   SectionNo INT, 
-  TrackSection TEXT NOT NULL, 
+  TrackSection VARCHAR(255) NOT NULL, 
   Length INT, 
   DoubleTrack BOOL,  
-  StartsAt TEXT NOT NULL,
-  EndsAt TEXT NOT NULL, 
+  StartsAt VARCHAR(255) NOT NULL,
+  EndsAt VARCHAR(255) NOT NULL, 
   FOREIGN KEY(StartsAt) REFERENCES Station(Name), 
   FOREIGN KEY(EndsAT) REFERENCES Station(Name), 
   FOREIGN KEY(TrackSection) REFERENCES TrackSection(name),  
@@ -31,15 +31,15 @@ CREATE TABLE TrackSubSection(
 
 --  TrainRoute    
 CREATE TABLE TrainRoute(
-  Name TEXT PRIMARY KEY NOT NULL, 
-  Operator TEXT, 
-  TrackName TEXT NOT NULL, 
+  Name VARCHAR(255) PRIMARY KEY NOT NULL, 
+  Operator VARCHAR(255), 
+  TrackName VARCHAR(255) NOT NULL, 
   FOREIGN KEY(TrackName) REFERENCES TrackSection(Name)
 );
 
 -- WeekDay
 CREATE TABLE WeekDay(
-  Name TEXT PRIMARY KEY NOT NULL,
+  Name VARCHAR(255) PRIMARY KEY NOT NULL,
 );
 
 -- Day of Route
@@ -63,8 +63,8 @@ CREATE TABLE Ticket(
 
 -- RouteStop
 CREATE TABLE RouteStop( 
-  RailwayStation TEXT, 
-  TrainRoute TEXT, 
+  RailwayStation VARCHAR(255), 
+  TrainRoute VARCHAR(255), 
   FOREIGN KEY(RailwayStation) REFERENCES RailwayStation(name), 
   FOREIGN KEY(TrainRoute) REFERENCES TrainRoute(name), 
   CONSTRAINT PK_RouteStop PRIMARY KEY(RailwayStation, TrainRoute)
@@ -74,7 +74,7 @@ CREATE TABLE RouteStop(
 -- TrainOccurance 
 CREATE TABLE TrainOccurance(
   Date DATE NOT NULL, 
-  TrainRoute TEXT NOT NULL, 
+  TrainRoute VARCHAR(255) NOT NULL, 
   FOREIGN KEY(TrainRoute) REFERENCES TrainRoute(Name), 
   CONSTRAINT PK_TrainOccurance PRIMARY KEY(Date, TrainRoute) 
 );
@@ -115,8 +115,8 @@ CREATE TABLE CustomerOrder(
 -- Customer
 CREATE TABLE Customer(
   CustomerID INT PRIMARY KEY NOT NULL, 
-  Name TEXT, 
-  Email TEXT, 
+  Name VARCHAR(255), 
+  Email VARCHAR(255), 
   PhoneNO INT, 
   RegistryID INT NOT NULL, 
   FOREIGN KEY(RegistryID) REFERENCES CustomerRegistry(RegistryID)
