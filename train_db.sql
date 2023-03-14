@@ -126,15 +126,5 @@ CREATE TABLE Customer(
   Name VARCHAR(255) NOT NULL, 
   Email VARCHAR(255) NOT NULL, 
   PhoneNO INT NOT NULL, 
-  RegistryID INT NOT NULL, 
-  PRIMARY KEY (CustomerID, RegistryID),
-  FOREIGN KEY(RegistryID) REFERENCES CustomerRegistry(RegistryID) ON UPDATE CASCADE ON DELETE CASCADE
+  PRIMARY KEY (CustomerID)
 );
-
--- CustomerRegistry
-CREATE TABLE CustomerRegistry(
-  RegistryID INT NOT NULL,
-  PRIMARY KEY (RegistryID)
-);
-
-
