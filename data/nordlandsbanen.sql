@@ -29,5 +29,3 @@ VALUES
     (4, "Nordlandsbanen", 120, "Mo i Rana", "Fauske"),
     (5, "Nordlandsbanen", 60, "Fauske", "Bodø");
 
-
-

@@ -57,7 +57,7 @@ class DB:
 
 if __name__ == "__main__":
     db = DB("norwegian_rail.db", "generate_railway_tables.sql", erase=True)
-    print(db)
+    db.run_sql_script("data/nordlandsbanen.sql")
 
 
     
