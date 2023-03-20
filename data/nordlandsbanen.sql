@@ -1,4 +1,5 @@
 
+-- SQL script for Nordlandsbanen
 /* Tables that should exists:
     TrackSection
     RailwayStation
