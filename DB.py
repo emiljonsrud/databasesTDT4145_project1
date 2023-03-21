@@ -61,6 +61,7 @@ if __name__ == "__main__":
     db.run_sql_script("generate_railway_tables.sql")
     db.run_sql_script("data/nordlandsbanen.sql")
     db.run_sql_script("data/fill_trainroutes.sql")
+    db.run_sql_script("data/trainOccurance_fill.sql")
 
     
 
