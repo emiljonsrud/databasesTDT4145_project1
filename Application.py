@@ -2,7 +2,8 @@
 from DB import DB
 from tabulate import tabulate
 from simple_term_menu import TerminalMenu
-
+from os import system
+import time
 
 class App:
     def __init__(self):
@@ -11,7 +12,7 @@ class App:
         """Start the application"""
         pass
 
-    # --- Internal functions --- {{{
+# --- Internal functions --- {{{
     def _menu(self):
         """List possible functions and let user choose.""" 
         pass
@@ -40,9 +41,9 @@ class App:
 
     # --- }}}
     # --- UI --- {{{
-    def _linebreak(self) -> str:
-        """Return a linebreak."""
-        return "\n\n============================================\n"
+    def _clear_screen(self) -> str:
+        """Clear output screan"""
+        system("clear")
 
     def _user_option_response(self, msg: str, options: list, **kwargs) -> str:
         """Get a users respons given a list of alternatives.
@@ -66,7 +67,7 @@ class App:
             raise SystemExit
         return options[menu_entry_index]
 
-    def _user_varchar_response(self, max_len: int, min_len: int) -> str:
+    def _user_varchar_response(self, msg: str, min_len: int, max_len: int) -> str:
         """Get users respons for inputing a VARCHAR(255) value.
 
         -- Inputs
@@ -76,24 +77,70 @@ class App:
         -- Out
         :response: string containing user response.
         """
-        msg = "~> "
+        msg += "\n~> "
+        feedback = ""
 
         while True:
+            if feedback:
+                print(feedback)
+                feedback = ""
+                time.sleep(2)
+            self._clear_screen()
+
             try:
                 respons = str(input(msg))
             except EOFError:
-                print(self._linebreak() + "Enter a value")
+                feedback = "Enter a value"
                 continue
-            if len(respons) > 255:
-                print(self._linebreak() + "Too many characters. Try again.")
+            if len(respons) > max_len:
+                feedback = "Too many characters. Try again."
                 continue
-            elif len(respons) < 4: 
-                print(self._linebreak() + "Too few characters. Try again.")
+            elif len(respons) < min_len: 
+                feedback  = "Too few characters. Try again."
                 continue
             else:
                 # Valid input, break the loop
                 break
         return respons
+
+    def _user_int_response(self, msg: str, min_len, max_len) -> int:
+        """Get users respons for inputing an value.
+
+        -- Inputs
+        :param min_len: minimum length of inpu
+        :param max_len: maximum length of input.
+
+        -- Out
+        :response: string containing user response.
+        """
+        msg += "\n~> "
+        feedback = ""
+
+        while True:
+            if feedback:
+                print(feedback)
+                feedback = ""
+                time.sleep(2)
+            self._clear_screen()
+
+            try:
+                response = int(input(msg))
+            except EOFError:
+                feedback = "Enter a value"
+                continue
+            except ValueError:
+                feedback = "Input an numeric value"
+                continue
+            if len(str(response)) > max_len:
+                feedback = "Too many numbers. Try again."
+                continue
+            elif len(str(response)) < min_len: 
+                feedback = "Too few numbers. Try again."
+                continue
+            else:
+                # Valid input, break the loop
+                break
+        return response
 
     def _format_rows(self, rows) -> str:
         """Formats the rows of an returned sql-query into a nice table."""
@@ -101,9 +148,10 @@ class App:
         
     # --- }}}
 
-    # --- }}}
+# --- }}}
 
-    # --- User functions --- {{{
+# --- User functions --- {{{
+    # --- View train routes {{{
     def view_train_routes(self, db: DB):
         """Let user get information of trainroutes"""
 
@@ -129,14 +177,32 @@ class App:
             {"weekday" : response_day, "station" : response_station}
         ))
         print(table)
-
-
-
-    def register_user(self, db: DB):
-        """Let user register in the customer registry."""
-        pass
-        
     # --- }}}
+    # --- Register user {{{
+
+    def register_user(self, db: DB) -> int:
+        """Let user register in the customer registry."""
+
+        name = self._user_varchar_response("Full name:", 0, 255)
+        phone_no = self._user_int_response("Phone number", 0, 10)
+        email = self._user_varchar_response("Email:", 0, 255)
+        
+        try:
+            db.cursor.execute(
+                "INSERT INTO Customer (Name, Email, PhoneNO) VALUES (:name, :phone_no, :email)",
+                {"name": name, "phone_no": phone_no, "email": email}
+            )
+            db.con.commit()
+        except Exception as e:
+            print(e)
+            return 1
+
+        print("Successfully registered user!")
+        return 0
+
+    # --- }}}
+        
+# --- }}}
 
 if __name__=="__main__":
     app = App()
@@ -144,13 +210,9 @@ if __name__=="__main__":
     # print(app._user_varchar_response(4, 255))
 
     db = DB("test.db")
-   # app.view_train_routes(db)
-    rows = app._execute_query(
-        db, 
-        "queries/routes_between_stations.sql",
-        {"dato":'2023-04-03', "start_station" : "Steinkjer", "end_station": "Mosjøen"}
-        # {"dato":'2023-03-04', "start_station": "Steinkjer", "end_station": "Mosjøen"}
-    )
-    print(rows)
+    # app.view_train_routes(db)
+    # app._clear_screen()
+    # app.register_user(db)
+
 
 
