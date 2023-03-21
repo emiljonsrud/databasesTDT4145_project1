@@ -57,6 +57,7 @@ class App:
         :out: one element in options
         Raises SystemExit if user wants to exit.
         """
+        options = options.copy()
         options += [None, "Exit to main menu"]
 
         terminal_menu = TerminalMenu(options, title=msg, **kwargs)
@@ -154,6 +155,7 @@ class App:
     # --- View train routes {{{
     def view_train_routes(self, db: DB):
         """Let user get information of trainroutes"""
+        self._clear_screen()
 
         # Get all stations
         db.cursor.execute("SELECT Name FROM RailwayStation")
@@ -182,6 +184,7 @@ class App:
 
     def register_user(self, db: DB) -> int:
         """Let user register in the customer registry."""
+        self._clear_screen()
 
         name = self._user_varchar_response("Full name:", 0, 255)
         phone_no = self._user_int_response("Phone number", 0, 10)
@@ -201,6 +204,32 @@ class App:
         return 0
 
     # --- }}}
+    # --- Search routes between stops --- {{{
+    def seach_betwean_stops(self, db):
+        """Search trainroutes between two stops"""
+        self._clear_screen()
+
+        # Get all stations
+        db.cursor.execute("SELECT Name FROM RailwayStation")
+        stations = [row[0] for row in db.cursor.fetchall()]
+
+        # Get user respons
+        try:
+            response_station_1 = self._user_option_response("Select a start", stations)
+            stations.remove(response_station_1)
+            response_station_2 = self._user_option_response("Select a destination station", stations)
+        except SystemExit:
+            return
+
+        # Get table of rows that match the query
+        table = self._format_rows(self._execute_query(
+            db, 
+            "queries/routes_between_stations.sql", 
+            {"start_station" : response_station_1, "end_station" : response_station_2, "date_":"2023-04-03"}
+        ))
+        print(table)
+
+    # --- }}}
         
 # --- }}}
 
@@ -213,6 +242,7 @@ if __name__=="__main__":
     # app.view_train_routes(db)
     # app._clear_screen()
     # app.register_user(db)
+    app.seach_betwean_stops(db)
 
 
 
