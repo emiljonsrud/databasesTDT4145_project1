@@ -3,15 +3,6 @@ from DB import DB
 from tabulate import tabulate
 from simple_term_menu import TerminalMenu
 
-WeekDay = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-]
 
 class App:
     def __init__(self):
@@ -118,13 +109,16 @@ class App:
 
         # Get all stations
         db.cursor.execute("SELECT Name FROM RailwayStation")
-        rows = db.cursor.fetchall()
-        Stations = [row[0] for row in rows]
+        stations = [row[0] for row in db.cursor.fetchall()]
+
+        # Get all weekdays
+        db.cursor.execute("SELECT Name FROM WeekDay")
+        weekdays= [row[0] for row in db.cursor.fetchall()]
 
         # Get user respons
         try:
-            response_day = self._user_option_response("Select a weekday", WeekDay)
-            response_station = self._user_option_response("Select a station", Stations)
+            response_day = self._user_option_response("Select a weekday", weekdays)
+            response_station = self._user_option_response("Select a station", stations)
         except SystemExit:
             return
 
