@@ -56,9 +56,11 @@ class DB:
     # --- }}}
 
 if __name__ == "__main__":
-    db = DB("norwegian_rail.db", "generate_railway_tables.sql", erase=True)
+   # db = DB("norwegian_rail.db", "generate_railway_tables.sql", erase=True)
+    db = DB("test.db", erase = True)
+    db.run_sql_script("generate_railway_tables.sql")
     db.run_sql_script("data/nordlandsbanen.sql")
-
+    db.run_sql_script("data/togruter.sql")
 
     
 
