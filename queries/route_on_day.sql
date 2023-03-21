@@ -2,7 +2,7 @@
   :weekday (WeekDay.Name)
   :station (RailwayStation.Name)
 */
-SELECT TR.Name 
+SELECT DISTINCT TR.Name 
 FROM RailwayStation AS RS 
   INNER JOIN TrackSubSection AS TSS 
     ON (RS.Name = TSS.StartsAt OR RS.Name = TSS.EndsAt)
