@@ -230,6 +230,19 @@ class App:
         print(table)
 
     # --- }}}
+    # --- Purchase ticket --- {{{
+    def purachase_ticket(self, db: DB):
+        """Let user purchase available tickets from desired train route."""
+
+        # TODO create get available tickets query
+
+        # TODO create query to book seats (e.i.) insert into Ticket
+
+        pass
+
+
+
+    # --- }}}
         
 # --- }}}
 
@@ -242,7 +255,8 @@ if __name__=="__main__":
     # app.view_train_routes(db)
     # app._clear_screen()
     # app.register_user(db)
-    app.seach_betwean_stops(db)
+    # app.seach_betwean_stops(db)
+    app.purachase_ticket(db)
 
 
 
