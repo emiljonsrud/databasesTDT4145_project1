@@ -144,7 +144,13 @@ if __name__=="__main__":
     # print(app._user_varchar_response(4, 255))
 
     db = DB("test.db")
-    app.view_train_routes(db)
-
+   # app.view_train_routes(db)
+    rows = app._execute_query(
+        db, 
+        "queries/routes_between_stations.sql",
+        {"dato":'2023-04-03', "start_station" : "Steinkjer", "end_station": "Mosjøen"}
+        # {"dato":'2023-03-04', "start_station": "Steinkjer", "end_station": "Mosjøen"}
+    )
+    print(rows)
 
 
