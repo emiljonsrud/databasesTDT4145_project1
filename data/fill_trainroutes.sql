@@ -62,3 +62,37 @@ VALUES
     ("Thursday", "Morgentog-Mo_i_Rana-Trondheim"),
     ("Friday", "Morgentog-Mo_i_Rana-Trondheim");
     
+
+
+INSERT INTO TrainOccurance(RunDate, NameOfRoute)
+VALUES
+    ('2023-04-03', "Dagtog-Trondheim-Bodø"),
+    ('2023-04-03', "Nattog-Trondheim-Bodø"),
+    ('2023-04-03', "Morgentog-Mo_i_Rana-Trondheim"),
+    ('2023-04-04', "Dagtog-Trondheim-Bodø"),
+    ('2023-04-04', "Nattog-Trondheim-Bodø"),
+    ('2023-04-04', "Morgentog-Mo_i_Rana-Trondheim");
+
+
+INSERT INTO CarInTrain(CarID, CarNo, NameOfRoute)
+VALUES
+    (2000, 1, "Dagtog-Trondheim-Bodø"),
+    (2001, 2, "Dagtog-Trondheim-Bodø"),
+    (2002, 1, "Nattog-Trondheim-Bodø"),
+    (2003, 2, "Nattog-Trondheim-Bodø"),
+    (2004, 1, "Morgentog-Mo_i_Rana-Trondheim");
+
+
+INSERT INTO ChairCar(CarID, NumOfRows, SeatsPerRow)
+VALUES
+    (2000, 3, 4),
+    (2002, 3, 4),
+    (2004, 3, 4);
+
+INSERT INTO SleepCar(CarID, NumOfCompartments)
+VALUES
+    (2001, 4),
+    (2003, 4);
+
+
+
