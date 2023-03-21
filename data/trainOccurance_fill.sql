@@ -1,4 +1,8 @@
 
+/*
+This file is only for testing!
+*/
+
 INSERT INTO TrainRoute(Name, Operator, SectionName)
 VALUES
     ("Nr1", "SJ", "NordlandsBanen" ),

@@ -144,7 +144,7 @@ if __name__=="__main__":
     rows = app._execute_query(
         db, 
         "queries/routes_between_stations.sql",
-        {"start_station" : "Steinkjer", "end_station": "Mosjøen"}
+        {"dato":'2023-04-03', "start_station" : "Steinkjer", "end_station": "Mosjøen"}
         # {"dato":'2023-03-04', "start_station": "Steinkjer", "end_station": "Mosjøen"}
     )
     print(rows)
