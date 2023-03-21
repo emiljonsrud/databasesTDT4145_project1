@@ -1,15 +1,17 @@
 #!/usr/bin/python3
 from DB import DB
+from tabulate import tabulate
+from simple_term_menu import TerminalMenu
 
-WeekDay = {
-    1 : "Monday",
-    2 : "Tuesday",
-    3 : "Wednesday",
-    4 : "Thursday",
-    5 : "Friday",
-    6 : "Saturday",
-    7 : "Sunday",
-}
+WeekDay = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+]
 
 class App:
     def __init__(self):
@@ -51,29 +53,27 @@ class App:
         """Return a linebreak."""
         return "\n\n============================================\n"
 
-    def _user_option_response(self, alternatives: dict) -> int:
+    def _user_option_response(self, msg: str, options: list, **kwargs) -> str:
         """Get a users respons given a list of alternatives.
-        """
-        msg = f"Please choose an alternative (0-{len(alternatives)})\n"
-        
-        for key, val in alternatives.items():
-            msg += f"  ({str(key)+')':<4}{val}\n"
-        msg += "0: exit to menu.\n"
-        msg += "~> "
+        Inputs
+        :param msg: Message to user describing options
+        :param options: list of options user can choose.
 
-        while True:
-            try:
-                response = int(input(msg))
-            except ValueError:
-                print(self._linebreak() + "Please insert an integer.\n")
-                continue                           
-            if response not in range(0, len(alternatives)+1):
-                print(self._linebreak() + f"{response} is not a valid option.\n")
-                continue                       
-            else:
-                # Valid input, break the loop
-                break
-        return response
+        :Keyword Arguments: passed directly to TerminalMenu.
+
+        Output
+        :out: one element in options
+        Raises SystemExit if user wants to exit.
+        """
+        options += [None, "Exit to main menu"]
+
+        terminal_menu = TerminalMenu(options, title=msg, **kwargs)
+        menu_entry_index = terminal_menu.show()
+
+        if menu_entry_index == len(options)-1:
+            print("Exiting...")
+            raise SystemExit
+        return options[menu_entry_index]
 
     def _user_varchar_response(self, max_len: int, min_len: int) -> str:
         """Get users respons for inputing a VARCHAR(255) value.
@@ -103,6 +103,10 @@ class App:
                 # Valid input, break the loop
                 break
         return respons
+
+    def _format_rows(self, rows) -> str:
+        """Formats the rows of an returned sql-query into a nice table."""
+        return tabulate(rows, tablefmt='rounded_outline')    
         
     # --- }}}
 
@@ -112,23 +116,26 @@ class App:
     def view_train_routes(self, db: DB):
         """Let user get information of trainroutes"""
 
-        # Get all stations in an enumerated dictionary
+        # Get all stations
         db.cursor.execute("SELECT Name FROM RailwayStation")
         rows = db.cursor.fetchall()
-        Stations = {i+1 : row[0] for i, row in enumerate(rows)}
+        Stations = [row[0] for row in rows]
 
         # Get user respons
-        response_day = self._user_option_response(WeekDay)
-        response_station = self._user_option_response(Stations)
+        try:
+            response_day = self._user_option_response("Select a weekday", WeekDay)
+            response_station = self._user_option_response("Select a station", Stations)
+        except SystemExit:
+            return
 
-        # Get rows that match the query
-        rows = self._execute_query(
+        # Get table of rows that match the query
+        table = self._format_rows(self._execute_query(
             db, 
             "queries/route_on_day.sql", 
-            {"weekday" : WeekDay.get(response_day), "station" : Stations.get(response_station)}
-        )
+            {"weekday" : response_day, "station" : response_station}
+        ))
+        print(table)
 
-        print(rows)
 
 
     def register_user(self, db: DB):
