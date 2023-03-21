@@ -23,6 +23,30 @@ class App:
         """List possible functions and let user choose.""" 
         pass
 
+    # --- SQL --- {{{
+    def _execute_query(self, db: DB, query_path: str, params: dict):
+        """Execute a query on a database.
+        Inputs
+        :param db: DB object to query
+        :param query_path: relative path to .sql query
+        :param params: dictionary containing paramaters for the query.
+        
+        Output
+        :rows: resulting rows of the query
+
+        Ex:
+            contents of sql-file: SELECT * TrainRoute WHERE StartStation = :station;
+            params: {"station" : "Bodø"}
+        """
+        
+        with open(query_path, "r") as sql_file:
+            query = sql_file.read()
+
+        db.cursor.execute(query, params)
+        return db.cursor.fetchall()
+
+    # --- }}}
+    # --- UI --- {{{
     def _linebreak(self) -> str:
         """Return a linebreak."""
         return "\n\n============================================\n"
@@ -80,27 +104,43 @@ class App:
                 break
         return respons
         
+    # --- }}}
 
     # --- }}}
 
     # --- User functions --- {{{
     def view_train_routes(self, db: DB):
         """Let user get information of trainroutes"""
-        response = self._user_option_response(WeekDay)
+        response_day = self._user_option_response(WeekDay)
+        response_station = "Bodø"
+
+        # db.cursor.execute("SELECT Name FROM RailwayStation")
+        # rows = db.cursor.fetchall()
+        # print(rows[:][:][0])
+        # stations = {i : val for i, val in enumerate(rows[:][0])}
+
+
+        rows = self._execute_query(
+            db, 
+            "queries/route_on_day.sql", 
+            {"weekday" : WeekDay.get(response_day), "station" : response_station}
+        )
+        print(rows)
+
 
     def register_user(self, db: DB):
         """Let user register in the customer registry."""
         pass
-
-
         
-        pass
     # --- }}}
 
 if __name__=="__main__":
     app = App()
     # print(app._user_response(WeekDay))
-    print(app._user_varchar_response())
+    # print(app._user_varchar_response(4, 255))
+
+    db = DB("test.db")
+    app.view_train_routes(db)
 
 
 
