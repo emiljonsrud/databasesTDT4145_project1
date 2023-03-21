@@ -13,7 +13,7 @@ WHERE TOCC.RunDate = :dato;
 
 
 
-SELECT DISTINCT TR.Name, RS.TimeOfDay
+SELECT DISTINCT TR.Name, RS.TimeOfDay, TOCC.RunDate
 FROM 
     ((TrainOccurance AS TOCC INNER JOIN TrainRoute AS TR 
     ON (TOCC.NameOfRoute = TR.Name))
@@ -21,8 +21,11 @@ FROM
     ON (TR.Name = RS.NameOfRoute)) 
     INNER JOIN RouteStop AS RS2 ON (RS.NameOfRoute = RS2.NameOfRoute)
     WHERE
-    RS.Station = :start_station AND RS2.Station = :end_station
-    ORDER BY RS.TimeOfDay ASC;
+    RS.Station = :start_station AND RS2.Station = :end_station AND (TOCC.RunDate = :dato OR TOCC.RunDate = :dato +1)
+    ORDER BY TOCC.Rundate ASC, RS.TimeOfDay ASC;
+
+
+
 
 
 /*
