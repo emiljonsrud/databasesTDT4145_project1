@@ -67,7 +67,7 @@ class App:
             except ValueError:
                 print(self._linebreak() + "Please insert an integer.\n")
                 continue                           
-            if response not in range(0, len(alternatives)):
+            if response not in range(0, len(alternatives)+1):
                 print(self._linebreak() + f"{response} is not a valid option.\n")
                 continue                       
             else:
@@ -111,20 +111,23 @@ class App:
     # --- User functions --- {{{
     def view_train_routes(self, db: DB):
         """Let user get information of trainroutes"""
+
+        # Get all stations in an enumerated dictionary
+        db.cursor.execute("SELECT Name FROM RailwayStation")
+        rows = db.cursor.fetchall()
+        Stations = {i+1 : row[0] for i, row in enumerate(rows)}
+
+        # Get user respons
         response_day = self._user_option_response(WeekDay)
-        response_station = "Bodø"
+        response_station = self._user_option_response(Stations)
 
-        # db.cursor.execute("SELECT Name FROM RailwayStation")
-        # rows = db.cursor.fetchall()
-        # print(rows[:][:][0])
-        # stations = {i : val for i, val in enumerate(rows[:][0])}
-
-
+        # Get rows that match the query
         rows = self._execute_query(
             db, 
             "queries/route_on_day.sql", 
-            {"weekday" : WeekDay.get(response_day), "station" : response_station}
+            {"weekday" : WeekDay.get(response_day), "station" : Stations.get(response_station)}
         )
+
         print(rows)
 
 
