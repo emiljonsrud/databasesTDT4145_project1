@@ -21,9 +21,21 @@ FROM
     ON (TR.Name = RS.NameOfRoute)) 
     INNER JOIN RouteStop AS RS2 ON (RS.NameOfRoute = RS2.NameOfRoute)
     WHERE
-    RS.Station = :start_station AND RS2.Station = :end_station AND (TOCC.RunDate = :dato OR TOCC.RunDate = :dato +1)
-    ORDER BY TOCC.Rundate ASC, RS.TimeOfDay ASC;
+    RS.Station = :start_station AND RS2.Station = :end_station AND TOCC.RunDate = :dato
+    --ORDER BY TOCC.Rundate ASC, RS.TimeOfDay ASC
 
+UNION
+
+SELECT DISTINCT TR.Name, RS.TimeOfDay, TOCC.RunDate
+FROM 
+    ((TrainOccurance AS TOCC INNER JOIN TrainRoute AS TR 
+    ON (TOCC.NameOfRoute = TR.Name))
+    INNER JOIN RouteStop AS RS 
+    ON (TR.Name = RS.NameOfRoute)) 
+    INNER JOIN RouteStop AS RS2 ON (RS.NameOfRoute = RS2.NameOfRoute)
+    WHERE
+    RS.Station = :start_station AND RS2.Station = :end_station AND TOCC.RunDate = (SELECT DATE(:dato, '+1 day'))
+    ORDER BY TOCC.Rundate ASC, RS.TimeOfDay ASC;
 
 
 
