@@ -60,7 +60,7 @@ if __name__ == "__main__":
     db = DB("test.db", erase = True)
     db.run_sql_script("generate_railway_tables.sql")
     db.run_sql_script("data/nordlandsbanen.sql")
-    db.run_sql_script("data/togruter.sql")
+    db.run_sql_script("data/fill_trainroutes.sql")
 
     
 
