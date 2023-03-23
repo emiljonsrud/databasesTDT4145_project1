@@ -78,6 +78,7 @@ class App:
         """Clear output screan"""
         system("clear")
 
+        # --- User response --- {{{
     def _user_option_response(self, msg: str, options: list, **kwargs) -> str:
         """Get a users respons given a list of alternatives.
         Inputs
@@ -174,6 +175,8 @@ class App:
                 break
         return response
 
+        # --- }}}
+        # --- Formatters --- {{{
     def _format_rows(self, rows, **kwargs) -> str:
         """Formats the rows of an returned sql-query into a nice table."""
         return tabulate(rows, **kwargs)    
@@ -204,7 +207,6 @@ class App:
         for i in reserved_seats:
             seats[i-1] = "🚫"
 
-
         # Divide into two columns
         formatted_seats = [[" " for _ in range(2)] for _ in range(n_rows)]
         for i in range(n_rows):
@@ -215,11 +217,20 @@ class App:
 
             formatted_seats[i][0] = "".join(left_col)
             formatted_seats[i][1] = "".join(right_col)
-
         return self._format_rows(formatted_seats, tablefmt="rounded_grid", colalign=("center","center"))
-        
-    # --- }}}
 
+    def _format_car_table(self, table):
+        '''Formats a (CarID, CarNo, NumOfRows, SeatsPerRow, NumOfCompartments)
+            table into a list of ["CarNo  CarType"].
+        '''
+        formatted_list = [""]*len(table)
+        for i, row in enumerate(table):
+            car_type = "Sleep car" if row[4] else "Chair car"
+            formatted_list[i] = f"{row[1]:>2} {car_type}"
+        return formatted_list
+
+        # --- }}}
+    # --- }}}
 # --- }}}
 
 # --- User functions --- {{{
@@ -303,26 +314,52 @@ class App:
     # --- Purchase ticket --- {{{
     def purachase_ticket(self, db: DB):
         """Let user purchase available tickets from desired train route."""
+
+        while True:
+            try:
+                # Select route 
+                routes = self.seach_betwean_stops(db)
+                options = ["  ".join(route) for route in routes]
+                route = routes[self._user_option_response("Select a desired route", options)][0]
+
+                try: 
+                    # Select car
+                    cars = self._execute_query(db, "queries/get_cars.sql", {"train_route":route})
+                    options = self._format_car_table(cars)
+                    car = cars[self._user_option_response("Select a car. (Car number, Car type)", options)]
+
+                    try:
+                        # Select seat
+                        car_id, car_no, n_rows, seats_per_row, n_compartments = car
+                        if n_compartments:
+                            n_rows = n_compartments
+                            seats_per_row = 2
+
+                        #########################
+                        # TEST VARIABLES:
+                        tickets = [1, 6]
+                        #########################
+
+                        options = np.delete(np.arange(1, (2*n_rows)+1), np.array(tickets)-1).tolist()
+
+                        car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets)
+                        user_booking = self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
+
+                    except SystemExit:
+                        continue # Exit seat selection
+
+                except SystemExit:
+                    continue # Exit route selection
+
+            except SystemExit:
+                return
+            except TypeError:
+                return
+
+        
         
         # TODO create get available tickets query
 
-        #########################
-        # TEST VARIABLES:
-        tickets = [1, 6, 8]
-        n_rows = 0
-        seats_per_row = 0
-        n_compartments = 4
-        #########################
-
-        car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets)
-
-        # options = np.delete(np.arange(1, n_rows*seats_per_row+1), np.array(tickets)-1).tolist()
-        options = np.delete(np.arange(1, (2*n_compartments)+1), np.array(tickets)-1).tolist()
-
-        try:
-            user_booking = self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
-        except SystemExit:
-            return
 
         # TODO create query to book seats (e.i.) insert into Ticket
 
@@ -342,7 +379,7 @@ if __name__=="__main__":
     # print(app._user_response(WeekDay))
     # print(app._user_varchar_response(4, 255))
 
-    # db = DB("test.db")
+    db = DB("test.db")
     # app._clear_screen()
     # app.view_train_routes(db)
     # app.register_user(db)

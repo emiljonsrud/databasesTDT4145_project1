@@ -80,7 +80,7 @@ CREATE TABLE Placement(
 CREATE TABLE CarInTrain(
   CarID INT PRIMARY KEY NOT NULL, 
   CarNo INT,
-  NameOfRoute,
+  NameOfRoute, -- Denne ble ikke dokumentert i DB1
   FOREIGN KEY (NameOfRoute) REFERENCES TrainRoute(Name) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
