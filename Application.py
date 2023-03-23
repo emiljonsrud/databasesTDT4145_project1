@@ -44,7 +44,7 @@ class App:
                 continue
 
         try:
-            ret = functions.get(options[user_response])(db)
+            ret = self._format_rows(functions.get(options[user_response])(db), tablefmt = "rounded_grid")
             self._user_option_response(ret, ["Continue"])
         except SystemExit:
             pass
@@ -244,11 +244,11 @@ class App:
             return
 
         # Get table of rows that match the query
-        table = self._format_rows(self._execute_query(
+        table = self._execute_query(
             db, 
             "queries/route_on_day.sql", 
             {"weekday" : response_day, "station" : response_station}
-        ), tablefmt="rounded_grid")
+        )
         return table
 
     # --- }}}
@@ -271,7 +271,7 @@ class App:
             print(e)
             return 1
 
-        return f"Successfully registered user {name}!"
+        return [[f"Successfully registered user {name}!"]]
 
     # --- }}}
     # --- Search routes between stops --- {{{
@@ -292,17 +292,18 @@ class App:
             return
 
         # Get table of rows that match the query
-        table = self._format_rows(self._execute_query(
+        table = self._execute_query(
             db, 
             "queries/routes_between_stations.sql", 
             {"start_station" : response_station_1, "end_station" : response_station_2, "date_":"2023-04-03"}
-        ), tablefmt = "rounded_grid")
+        )
         return table
 
     # --- }}}
     # --- Purchase ticket --- {{{
     def purachase_ticket(self, db: DB):
         """Let user purchase available tickets from desired train route."""
+        
         # TODO create get available tickets query
 
         #########################
