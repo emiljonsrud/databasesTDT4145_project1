@@ -1,5 +1,5 @@
 /*
-Input: CustomerID
+Input: customer_id
 */
 
 SELECT C1.CustomerID, TOS1.StartStation, RS1.TimeOfDay, TOS2.EndStation, RS2.TimeOfDay
@@ -20,7 +20,7 @@ FROM
     INNER JOIN 
     (
     SELECT  
-        TOS2.EndStation, ROS2.TimeOfDay
+        TR2.Name, TOS2.EndStation, RS2.TimeOfDay
     FROM
         (((((Customer as C2 INNER JOIN CustomerOrder AS CO2 
         ON (C2.CustomerID = CO2.CustomerID))
@@ -38,8 +38,9 @@ FROM
         RS2.Station = TOS2.EndStation AND
         C2.CustomerID = :customer_id
     )
+    ON (TR1.Name = TR2.Name)
 
-Where RS1.Station = TOS1.StartStation 
+WHERE RS1.Station = TOS1.StartStation 
     AND C1.CustomerID = :customer_id;
 
 
