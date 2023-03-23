@@ -14,12 +14,41 @@ class App:
         pass
     def run(self):
         """Start the application"""
-        pass
+
+        db = DB("test.db")
+        while True:
+            app._clear_screen()
+            self._main_menu(db)
 
 # --- Internal functions --- {{{
-    def _menu(self):
-        """List possible functions and let user choose.""" 
-        pass
+    def _main_menu(self, db: DB):
+        """Show a menu for the user to selct a function.""" 
+
+        functions = {
+            "View train routes passing through a station on a weekday" : self.view_train_routes,
+            "Register a new user" : self.register_user,
+            "Search train routes between two stops" : self.seach_betwean_stops,
+            "Purchase a ticket" : self.purachase_ticket
+        }
+
+        options = list(functions.keys())
+        msg = "What would you like to do?"
+        while True:
+            try:
+                user_response = self._user_option_response(msg, options)
+                break
+            except SystemExit:
+                exit = self._user_option_response("Are you sure you want to exit?", ["No", "Yes"])
+                if exit:
+                    return
+                continue
+
+        try:
+            ret = functions.get(options[user_response])(db)
+            self._user_option_response(ret, ["Continue"])
+        except SystemExit:
+            pass
+        return
 
     # --- SQL --- {{{
     def _execute_query(self, db: DB, query_path: str, params: dict):
@@ -67,7 +96,6 @@ class App:
         menu_entry_index = terminal_menu.show()
 
         if menu_entry_index == None:
-            print("Exiting...")
             raise SystemExit
         return menu_entry_index
 
@@ -314,12 +342,14 @@ if __name__=="__main__":
     # print(app._user_response(WeekDay))
     # print(app._user_varchar_response(4, 255))
 
-    db = DB("test.db")
-    app._clear_screen()
+    # db = DB("test.db")
+    # app._clear_screen()
     # app.view_train_routes(db)
     # app.register_user(db)
     # app.seach_betwean_stops(db)
-    app.purachase_ticket(db)
+    # app.purachase_ticket(db)
+
+    app.run()
 
 
 
