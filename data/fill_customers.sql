@@ -15,15 +15,15 @@ VALUES
   (2, '2023-02-04', '08:00', 1);
 
  -- Test for 1 customer
-INSERT INTO Ticket(OrderID, CarID, PlaceNo, NameOfRoute)
+INSERT INTO Ticket(TicketNo, OrderID, CarID, PlaceNo, NameOfRoute)
 VALUES
-  (1, 2000, 2, "Dagtog-Trondheim-Bodø"),
-  (2, 2001, 4, "Dagtog-Trondheim-Bodø");
+  (1, 1, 2000, 2, "Dagtog-Trondheim-Bodø"),
+  (2, 2, 2001, 4, "Dagtog-Trondheim-Bodø");
 
 INSERT INTO TicketOnSection(TicketNo, StartStation, EndStation)
 VALUES
-  (1, "Trondheim", "Mosjøen"),
-  (2, "Trondheim", "Fauske");
+  (1, "Trondheim", "Fauske"),
+  (2, "Steinkjer", "Mo i Rana");
 
 
 INSERT INTO Placement(PlaceNo, CarID)

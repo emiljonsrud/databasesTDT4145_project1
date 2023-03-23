@@ -103,7 +103,7 @@ CREATE TABLE SleepCar(
 
 -- Ticket
 CREATE TABLE Ticket(
-  TicketNo INT AUTO_INCREMENT NOT NULL,
+  TicketNo INT  NOT NULL, --AUTO_INCREMENT Include tihs later (error)
   OrderID INT NOT NULL,
   CarID INT NOT NULL,
   PlaceNo INT NOT NULL,
