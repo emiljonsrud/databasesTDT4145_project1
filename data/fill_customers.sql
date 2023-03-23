@@ -7,3 +7,28 @@ VALUES
   ("Ola Nordman", 47474747, "ola@norge.no"),
   ("Rolf Rolfsen", 9009100, "rullerolf@online.com"),
   ("Hermine Grange", 10020343, "hermgra@stud.galtvort.no");
+
+
+INSERT INTO CustomerOrder(OrderID, OrderDate, OrderTime, CustomerID)
+VALUES
+  (1, '2023-02-02', '09:00', 1),
+  (2, '2023-02-04', '08:00', 1);
+
+ -- Test for 1 customer
+INSERT INTO Ticket(TicketNo, OrderID, CarID, PlaceNo, NameOfRoute, RunDate)
+VALUES
+  (1, 1, 2000, 2, "Dagtog-Trondheim-Bodø",'2023-04-03' ),
+  (2, 2, 2001, 4, "Dagtog-Trondheim-Bodø", '2023-04-03');
+
+INSERT INTO TicketOnSection(TicketNo, StartStation, EndStation)
+VALUES
+  (1, "Trondheim", "Fauske"),
+  (2, "Steinkjer", "Mo i Rana");
+
+
+INSERT INTO Placement(PlaceNo, CarID)
+VALUES
+  (2, 2000),
+  (4, 2001);
+
+
