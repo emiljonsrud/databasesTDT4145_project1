@@ -1,9 +1,13 @@
 #!/usr/bin/python3
+# --- Imports --- {{{
 from DB import DB
+
 from tabulate import tabulate
 from simple_term_menu import TerminalMenu
 from os import system
 import time
+import numpy as np
+# --- }}}
 
 class App:
     def __init__(self):
@@ -57,7 +61,7 @@ class App:
         :out: one element in options
         Raises SystemExit if user wants to exit.
         """
-        options = options.copy()
+        options = list(map(str, options)).copy()
         options += [None, "Exit to main menu"]
 
         terminal_menu = TerminalMenu(options, title=msg, **kwargs)
@@ -143,9 +147,27 @@ class App:
                 break
         return response
 
-    def _format_rows(self, rows) -> str:
+    def _format_rows(self, rows, **kwargs) -> str:
         """Formats the rows of an returned sql-query into a nice table."""
-        return tabulate(rows, tablefmt='rounded_outline')    
+        return tabulate(rows, **kwargs)    
+        
+    def _format_chair_car(self, n_rows: int, seats_per_row: int, reserved_seats: list[int]) -> str:
+        """Formats information about a car into a nice table.
+        -- Inputs
+        :param n_rows: number of rows in the carrige
+        :param seats_per_row: number of seats per row in the car
+        :parram reserved_seats: list of seats that are reserved (1-indexed)
+        """
+        n_seats = n_rows * seats_per_row
+        if n_seats < max(reserved_seats):
+            raise ValueError(f"Only {n_seats} available. Can not reserve seat {max(reserved_seats)}")
+
+        seats = np.arange(1, n_seats+1).tolist()
+        for i in reserved_seats:
+            seats[i-1] = "🚫"
+        seats = np.array([str(seats[i]) + "   " + str(seats[i+1]) for i in range(0, n_seats, 2)]).reshape(n_rows, int(seats_per_row/2))
+
+        return self._format_rows(seats, tablefmt="rounded_grid")
         
     # --- }}}
 
@@ -177,11 +199,11 @@ class App:
             db, 
             "queries/route_on_day.sql", 
             {"weekday" : response_day, "station" : response_station}
-        ))
+        ), tablefmt="rounded_grid")
         print(table)
+
     # --- }}}
     # --- Register user {{{
-
     def register_user(self, db: DB) -> int:
         """Let user register in the customer registry."""
         self._clear_screen()
@@ -233,8 +255,24 @@ class App:
     # --- Purchase ticket --- {{{
     def purachase_ticket(self, db: DB):
         """Let user purchase available tickets from desired train route."""
-
         # TODO create get available tickets query
+
+        # Temporary:
+        tickets = [1, 6, 8]
+        n_rows = 3
+        seats_per_row = 4
+
+        car_overview = self._format_chair_car(n_rows, seats_per_row, tickets)
+        options = np.delete(np.arange(1, n_rows*seats_per_row+1), np.array(tickets)-1).tolist()
+
+        self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
+
+
+
+
+
+
+
 
         # TODO create query to book seats (e.i.) insert into Ticket
 
