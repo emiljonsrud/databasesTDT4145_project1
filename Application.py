@@ -69,7 +69,7 @@ class App:
         if menu_entry_index == None:
             print("Exiting...")
             raise SystemExit
-        return options[menu_entry_index]
+        return menu_entry_index
 
     def _user_varchar_response(self, msg: str, min_len: int, max_len: int) -> str:
         """Get users respons for inputing a VARCHAR(255) value.
@@ -188,8 +188,8 @@ class App:
 
         # Get user respons
         try:
-            response_day = self._user_option_response("Select a weekday", weekdays, show_shortcut_hints=True)
-            response_station = self._user_option_response("Select a station", stations, show_shortcut_hints=True)
+            response_day = weekdays[self._user_option_response("Select a weekday", weekdays, show_shortcut_hints=True)]
+            response_station = stations[self._user_option_response("Select a station", stations, show_shortcut_hints=True)]
         except SystemExit:
             return
 
@@ -289,8 +289,8 @@ if __name__=="__main__":
     # print(app._user_varchar_response(4, 255))
 
     db = DB("test.db")
-    app.view_train_routes(db)
-    # app._clear_screen()
+    app._clear_screen()
+    # app.view_train_routes(db)
     # app.register_user(db)
     # app.seach_betwean_stops(db)
     app.purachase_ticket(db)
