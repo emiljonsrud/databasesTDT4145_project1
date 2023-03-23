@@ -278,12 +278,13 @@ class App:
         """Let user purchase available tickets from desired train route."""
         # TODO create get available tickets query
 
-        # Temporary:
-        chair_car = True
+        #########################
+        # TEST VARIABLES:
         tickets = [1, 6, 8]
         n_rows = 0
         seats_per_row = 0
         n_compartments = 4
+        #########################
 
         car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets)
 
@@ -295,18 +296,7 @@ class App:
         except SystemExit:
             return
 
-
-
-
-
-
-
-
-
         # TODO create query to book seats (e.i.) insert into Ticket
-
-        pass
-
 
 
     # --- }}}
