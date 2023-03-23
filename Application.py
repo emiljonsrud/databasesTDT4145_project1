@@ -286,8 +286,11 @@ class App:
 
     # --- }}}
     # --- Search routes between stops --- {{{
-    def seach_betwean_stops(self, db):
-        """Search trainroutes between two stops"""
+    def seach_betwean_stops(self, db: DB, **kwargs):
+        """Search trainroutes between two stops
+        -- Keyword Arguments:
+            * ret_station: bool (return start and stop stations)
+        """
         self._clear_screen()
 
         # Get all stations
@@ -299,6 +302,7 @@ class App:
             response_station_1 = stations[self._user_option_response("Select a start", stations)]
             stations.remove(response_station_1)
             response_station_2 = stations[self._user_option_response("Select a destination station", stations)]
+            # TODO User date response!!!!!!!
         except SystemExit:
             return
 
@@ -308,7 +312,10 @@ class App:
             "queries/routes_between_stations.sql", 
             {"start_station" : response_station_1, "end_station" : response_station_2, "date_":"2023-04-03"}
         )
-        return table
+        if kwargs.get("ret_station"):
+            return table, response_station_1, response_station_2
+        else:
+            return table
 
     # --- }}}
     # --- Purchase ticket --- {{{
@@ -318,15 +325,16 @@ class App:
         while True:
             try:
                 # Select route 
-                routes = self.seach_betwean_stops(db)
+                routes, start_station, end_station = self.seach_betwean_stops(db, ret_station=True)
                 options = ["  ".join(route) for route in routes]
-                route = routes[self._user_option_response("Select a desired route", options)][0]
+                route_name, route_time, route_date = routes[self._user_option_response("Select a desired route", options)]
 
                 try: 
                     # Select car
-                    cars = self._execute_query(db, "queries/get_cars.sql", {"train_route":route})
+                    cars = self._execute_query(db, "queries/get_cars.sql", {"train_route":route_name})
                     options = self._format_car_table(cars)
                     car = cars[self._user_option_response("Select a car. (Car number, Car type)", options)]
+
 
                     try:
                         # Select seat
@@ -335,10 +343,14 @@ class App:
                             n_rows = n_compartments
                             seats_per_row = 2
 
-                        #########################
-                        # TEST VARIABLES:
-                        tickets = [1, 6]
-                        #########################
+                        params = {
+                            "run_date" : route_date,
+                            "name_of_route" : route_name,
+                            "car_id" : car_id,
+                            "start_station" : start_station,
+                            "end_station" : end_station
+                        }
+                        tickets = [ticket[0] for ticket in self._execute_query(db, "queries/get_taken_seats.sql", params)]
 
                         options = np.delete(np.arange(1, (2*n_rows)+1), np.array(tickets)-1).tolist()
 
@@ -354,14 +366,10 @@ class App:
             except SystemExit:
                 return
             except TypeError:
-                return
-
-        
-        
-        # TODO create get available tickets query
-
+                return "TypeError"
 
         # TODO create query to book seats (e.i.) insert into Ticket
+        return [["Successfully booked seat(s) {tickets}"]]
 
 
     # --- }}}
