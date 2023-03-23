@@ -62,12 +62,11 @@ class App:
         Raises SystemExit if user wants to exit.
         """
         options = list(map(str, options)).copy()
-        options += [None, "Exit to main menu"]
 
         terminal_menu = TerminalMenu(options, title=msg, **kwargs)
         menu_entry_index = terminal_menu.show()
 
-        if menu_entry_index == len(options)-1:
+        if menu_entry_index == None:
             print("Exiting...")
             raise SystemExit
         return options[menu_entry_index]
@@ -189,8 +188,8 @@ class App:
 
         # Get user respons
         try:
-            response_day = self._user_option_response("Select a weekday", weekdays)
-            response_station = self._user_option_response("Select a station", stations)
+            response_day = self._user_option_response("Select a weekday", weekdays, show_shortcut_hints=True)
+            response_station = self._user_option_response("Select a station", stations, show_shortcut_hints=True)
         except SystemExit:
             return
 
@@ -290,7 +289,7 @@ if __name__=="__main__":
     # print(app._user_varchar_response(4, 255))
 
     db = DB("test.db")
-    # app.view_train_routes(db)
+    app.view_train_routes(db)
     # app._clear_screen()
     # app.register_user(db)
     # app.seach_betwean_stops(db)
