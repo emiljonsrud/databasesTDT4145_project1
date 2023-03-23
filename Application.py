@@ -249,7 +249,7 @@ class App:
             "queries/route_on_day.sql", 
             {"weekday" : response_day, "station" : response_station}
         ), tablefmt="rounded_grid")
-        print(table)
+        return table
 
     # --- }}}
     # --- Register user {{{
@@ -271,8 +271,7 @@ class App:
             print(e)
             return 1
 
-        print("Successfully registered user!")
-        return 0
+        return f"Successfully registered user {name}!"
 
     # --- }}}
     # --- Search routes between stops --- {{{
@@ -286,9 +285,9 @@ class App:
 
         # Get user respons
         try:
-            response_station_1 = self._user_option_response("Select a start", stations)
+            response_station_1 = stations[self._user_option_response("Select a start", stations)]
             stations.remove(response_station_1)
-            response_station_2 = self._user_option_response("Select a destination station", stations)
+            response_station_2 = stations[self._user_option_response("Select a destination station", stations)]
         except SystemExit:
             return
 
@@ -297,8 +296,8 @@ class App:
             db, 
             "queries/routes_between_stations.sql", 
             {"start_station" : response_station_1, "end_station" : response_station_2, "date_":"2023-04-03"}
-        ))
-        print(table)
+        ), tablefmt = "rounded_grid")
+        return table
 
     # --- }}}
     # --- Purchase ticket --- {{{
