@@ -3,3 +3,4 @@ tabulate
 simple_term_menu 
 os
 time
+numpy

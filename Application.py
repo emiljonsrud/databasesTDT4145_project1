@@ -1,9 +1,13 @@
 #!/usr/bin/python3
+# --- Imports --- {{{
 from DB import DB
+
 from tabulate import tabulate
 from simple_term_menu import TerminalMenu
 from os import system
 import time
+import numpy as np
+# --- }}}
 
 class App:
     def __init__(self):
@@ -57,16 +61,15 @@ class App:
         :out: one element in options
         Raises SystemExit if user wants to exit.
         """
-        options = options.copy()
-        options += [None, "Exit to main menu"]
+        options = list(map(str, options)).copy()
 
         terminal_menu = TerminalMenu(options, title=msg, **kwargs)
         menu_entry_index = terminal_menu.show()
 
-        if menu_entry_index == len(options)-1:
+        if menu_entry_index == None:
             print("Exiting...")
             raise SystemExit
-        return options[menu_entry_index]
+        return menu_entry_index
 
     def _user_varchar_response(self, msg: str, min_len: int, max_len: int) -> str:
         """Get users respons for inputing a VARCHAR(255) value.
@@ -143,9 +146,49 @@ class App:
                 break
         return response
 
-    def _format_rows(self, rows) -> str:
+    def _format_rows(self, rows, **kwargs) -> str:
         """Formats the rows of an returned sql-query into a nice table."""
-        return tabulate(rows, tablefmt='rounded_outline')    
+        return tabulate(rows, **kwargs)    
+        
+    def _format_car(self, n_compartments: int, n_rows: int, seats_per_row: int, reserved_seats: list[int]) -> str:
+        """Formats information about a car into a nice table.
+        -- Inputs
+        :param n_compartments: number of compartments in the carrige (can be 0)
+        :param n_rows: number of rows in the carrige (can be 0)
+        :param seats_per_row: number of seats per row in the car (can be 0)
+        :parram reserved_seats: list of seats that are reserved (1-indexed)
+        """
+        # Assert paramaters depending on car-type
+        if n_compartments:
+            seats_per_row = 2
+            n_rows = n_compartments
+            mid_seat = 0
+        else:
+            mid_seat = int(np.ceil(seats_per_row/2))
+        n_seats = n_rows * seats_per_row
+
+        # Verify validity of reserved_seats
+        if n_seats < max(reserved_seats):
+            raise ValueError(f"Only {n_seats} available. Can not reserve seat {max(reserved_seats)}")
+
+        # Mark reseved seats
+        seats = np.arange(1, n_seats+1).tolist()
+        for i in reserved_seats:
+            seats[i-1] = "🚫"
+
+
+        # Divide into two columns
+        formatted_seats = [[" " for _ in range(2)] for _ in range(n_rows)]
+        for i in range(n_rows):
+            curr_seat = i*seats_per_row
+
+            left_col = [f"{seats[j]:>3}" for j in range(curr_seat, curr_seat+mid_seat)]
+            right_col = [f"{seats[j]:>3}" for j in range(curr_seat+mid_seat, curr_seat+seats_per_row)]
+
+            formatted_seats[i][0] = "".join(left_col)
+            formatted_seats[i][1] = "".join(right_col)
+
+        return self._format_rows(formatted_seats, tablefmt="rounded_grid", colalign=("center","center"))
         
     # --- }}}
 
@@ -167,8 +210,8 @@ class App:
 
         # Get user respons
         try:
-            response_day = self._user_option_response("Select a weekday", weekdays)
-            response_station = self._user_option_response("Select a station", stations)
+            response_day = weekdays[self._user_option_response("Select a weekday", weekdays, show_shortcut_hints=True)]
+            response_station = stations[self._user_option_response("Select a station", stations, show_shortcut_hints=True)]
         except SystemExit:
             return
 
@@ -177,11 +220,11 @@ class App:
             db, 
             "queries/route_on_day.sql", 
             {"weekday" : response_day, "station" : response_station}
-        ))
+        ), tablefmt="rounded_grid")
         print(table)
+
     # --- }}}
     # --- Register user {{{
-
     def register_user(self, db: DB) -> int:
         """Let user register in the customer registry."""
         self._clear_screen()
@@ -230,6 +273,39 @@ class App:
         print(table)
 
     # --- }}}
+    # --- Purchase ticket --- {{{
+    def purachase_ticket(self, db: DB):
+        """Let user purchase available tickets from desired train route."""
+        # TODO create get available tickets query
+
+        #########################
+        # TEST VARIABLES:
+        tickets = [1, 6, 8]
+        n_rows = 0
+        seats_per_row = 0
+        n_compartments = 4
+        #########################
+
+        car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets)
+
+        # options = np.delete(np.arange(1, n_rows*seats_per_row+1), np.array(tickets)-1).tolist()
+        options = np.delete(np.arange(1, (2*n_compartments)+1), np.array(tickets)-1).tolist()
+
+        try:
+            user_booking = self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
+        except SystemExit:
+            return
+
+        # TODO create query to book seats (e.i.) insert into Ticket
+
+
+    # --- }}}
+    # --- View customer orders --- {{{
+    def view_customer_orders(self):
+        """View custmer orders"""
+        pass
+
+    # --- }}}
         
 # --- }}}
 
@@ -239,10 +315,11 @@ if __name__=="__main__":
     # print(app._user_varchar_response(4, 255))
 
     db = DB("test.db")
+    app._clear_screen()
     # app.view_train_routes(db)
-    # app._clear_screen()
     # app.register_user(db)
-    app.seach_betwean_stops(db)
+    # app.seach_betwean_stops(db)
+    app.purachase_ticket(db)
 
 
 
