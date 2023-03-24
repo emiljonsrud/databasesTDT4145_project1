@@ -4,29 +4,13 @@ Input: customer_id
 
 -- TODO Only show FUTURE orders! need current time
 
-SELECT  DISTINCT C1.CustomerID, P.PlaceNo, RS1.Station /*TOS1.StartStation*/, RS1.TimeOfDay, TOS1.EndStation
-/*
-,--PlassNr
-(SELECT RS2.TimeOfDay  -- Finding EndStop Arrival Time
-    FROM Customer as C2 
-        INNER JOIN CustomerOrder AS CO2 
-                ON C2.CustomerID = CO2.CustomerID
-            INNER JOIN Ticket AS T2
-                ON CO2.OrderID = T2.OrderID
-            INNER JOIN TicketOnSection AS TOS2
-                ON T2.TicketNo = TOS2.TicketNo
-            INNER JOIN TrainOccurance AS TO2 
-                ON T2.NameOfRoute = TO2.NameOfRoute
-            INNER JOIN TrainRoute AS TR2
-                ON TO2.NameOfRoute = TR2.Name
-            INNER JOIN RouteStop AS RS2
-                ON TR2.Name = RS2.NameOfRoute
-    WHERE 
-        RS2.Station = TOS2.EndStation 
-        AND C2.CustomerID = :customer_id) */
+
+SELECT  DISTINCT C1.CustomerID, RS1.Station , 
+                 TOS1.EndStation, RS1.TimeOfDay, 
+                 sub_query.TimeOfDay, P.PlaceNo,
+                 CarInTrain.CarNo, TR1.Name
 
 
--- ,TOS2.EndStation, RS2.TimeOfDay
 FROM Customer as C1 
     INNER JOIN CustomerOrder AS CO1 
         ON C1.CustomerID = CO1.CustomerID
@@ -39,21 +23,15 @@ FROM Customer as C1
     INNER JOIN TrainRoute AS TR1
         ON TO1.NameOfRoute = TR1.Name
    INNER JOIN RouteStop AS RS1
-        ON TR1.Name = RS1.NameOfRoute
-       
-
+        ON TR1.Name = RS1.NameOfRoute       
     INNER JOIN Placement AS P 
         ON T1.PlaceNo = P.PlaceNo
+    INNER JOIN CarInTrain
+        ON P.CarID = CarInTrain.CarID
 
- WHERE 
-         RS1.Station = TOS1.StartStation 
-        AND
-        C1.CustomerID = :customer_id;
+    INNER JOIN
 
-
-   /* INNER JOIN
-
-    SELECT DISTINCT TR2.Name,  RS2.TimeOfDay, TOS2.EndStation
+    (SELECT RS2.TimeOfDay, T2.OrderID  -- Finding EndStop Arrival Time   --Join on OrderID
     FROM Customer as C2 
         INNER JOIN CustomerOrder AS CO2 
                 ON C2.CustomerID = CO2.CustomerID
@@ -62,22 +40,22 @@ FROM Customer as C1
             INNER JOIN TicketOnSection AS TOS2
                 ON T2.TicketNo = TOS2.TicketNo
             INNER JOIN TrainOccurance AS TO2 
-                ON T2.NameOfRoute = TO2.NameOfRoute
+                ON T2.NameOfRoute = TO2.NameOfRoute AND  T2.RunDate = TO2.RunDate
             INNER JOIN TrainRoute AS TR2
                 ON TO2.NameOfRoute = TR2.Name
             INNER JOIN RouteStop AS RS2
                 ON TR2.Name = RS2.NameOfRoute
     WHERE 
         RS2.Station = TOS2.EndStation 
-        AND C2.CustomerID = 1
-    --AS subOrder(Na_, TD_ ,  ES_)
+        AND C2.CustomerID = :customer_id) sub_query
 
-*/
-    -- ON TR1.Name = subOrder.Na_ --TR2.Name
-    -- ON TR1.Name = TR2.Name
-/*
-WHERE RS2.Station = TOS2.StartStation 
-    AND C2.CustomerID = 1;
-*/
+    ON (sub_query.OrderID = T1.OrderID)
+
+ WHERE 
+         RS1.Station = TOS1.StartStation 
+        AND
+        C1.CustomerID = :customer_id
+        AND
+        TO1.RunDate >=  DATE()
 
 
