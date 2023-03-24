@@ -358,13 +358,24 @@ class App:
                     car = cars[self._user_option_response("Select a car. (Car number, Car type)", options)]
                     car_id, car_no, n_rows, seats_per_row, n_compartments = car
 
+                    # Find start and stop subsection numbers
+                    start_sec_no = db.cursor.execute(
+                        "SELECT TSS.SubSectionNo FROM TrackSubSection AS TSS WHERE TSS.StartsAt = :start_station",
+                        {"start_station":start_station}
+                    ).fetchall()[0][0]
+                    end_sec_no = db.cursor.execute(
+                        "SELECT TSS.SubSectionNo FROM TrackSubSection AS TSS WHERE TSS.EndsAt = :end_station",
+                        {"end_station":end_station}
+                    ).fetchall()[0][0]
+                    print(start_sec_no, end_sec_no)
+
                     # Find reserved seats
                     params = {
                         "run_date" : route_date,
                         "name_of_route" : route_name,
                         "car_id" : car_id,
-                        "start_station" : start_station,
-                        "end_station" : end_station
+                        "start_sec_no":start_sec_no, 
+                        "end_sec_no":end_sec_no
                     }
                     tickets = [ticket[0] for ticket in self._execute_query(db, "queries/get_taken_seats.sql", params)]
 
@@ -402,11 +413,20 @@ class App:
                     order_id = db.cursor.execute("SELECT last_insert_rowid();").fetchall()[0][0]
 
                     # Create Tickets
+                    params = {
+                        "order_id":order_id,
+                        "car_id":car_id,
+                        "route_name":route_name,
+                        "start_station":start_station,
+                        "end_station":end_station,
+                        "run_date":route_date
+                    }
                     for seat in user_booking:
+                        params["place_no"] = seat
                         db.cursor.execute(
-                            "INSERT INTO Ticket(OrderID, CarID, PlaceNo, NameOfRoute, RunDate)\
-                            VALUES (:order_id, :car_id, :place_no, :route_name, :run_date)",
-                            {"order_id":order_id,"car_id":car_id,"place_no":seat,"route_name":route_name,"run_date":route_date}
+                            "INSERT INTO Ticket(OrderID, CarID, PlaceNo, NameOfRoute, StartStation, EndStation, RunDate)\
+                            VALUES (:order_id, :car_id, :place_no, :route_name, :start_station, :end_station :run_date)",
+                            params
                         )
                         db.con.commit()
 
