@@ -16,9 +16,8 @@ class App:
         """Start the application"""
 
         db = DB("test.db")
-        while True:
-            app._clear_screen()
-            self._main_menu(db)
+        app._clear_screen()
+        self._main_menu(db)
 
 # --- Internal functions --- {{{
     def _main_menu(self, db: DB):
@@ -38,14 +37,17 @@ class App:
                 user_response = self._user_option_response(msg, options)
                 break
             except SystemExit:
-                exit = self._user_option_response("Are you sure you want to exit?", ["No", "Yes"])
+                try: 
+                    exit = self._user_option_response("Are you sure you want to exit?", ["No", "Yes"])
+                except SystemExit:
+                    continue
                 if exit:
                     return
                 continue
-
         try:
             ret = self._format_rows(functions.get(options[user_response])(db), tablefmt = "rounded_grid")
-            self._user_option_response(ret, ["Continue"])
+            if ret:
+                self._user_option_response(ret, ["Back to main menu"])
         except SystemExit:
             pass
         return
@@ -125,6 +127,8 @@ class App:
             except EOFError:
                 feedback = "Enter a value"
                 continue
+            except KeyboardInterrupt:
+                raise SystemExit
             if len(respons) > max_len:
                 feedback = "Too many characters. Try again."
                 continue
@@ -164,6 +168,8 @@ class App:
             except ValueError:
                 feedback = "Input an numeric value"
                 continue
+            except KeyboardInterrupt:
+                raise SystemExit
             if len(str(response)) > max_len:
                 feedback = "Too many numbers. Try again."
                 continue
@@ -174,6 +180,15 @@ class App:
                 # Valid input, break the loop
                 break
         return response
+    def _user_datetime_response(self):
+        """Gets users response for date"""
+        year = str(input("Enter a year (YYYY): "))
+        month = str(input("Enter a month (MM): "))
+        day = str(input("Enter a day (DD): "))
+        hour = str(input("Enter an hour (HH): "))
+        minute = str(input("Enter a minute (MM): "))
+        
+        return "-".join([year, month, day]), ":".join([hour, minute])
 
         # --- }}}
         # --- Formatters --- {{{
@@ -252,7 +267,7 @@ class App:
             response_day = weekdays[self._user_option_response("Select a weekday", weekdays, show_shortcut_hints=True)]
             response_station = stations[self._user_option_response("Select a station", stations, show_shortcut_hints=True)]
         except SystemExit:
-            return
+            return None
 
         # Get table of rows that match the query
         table = self._execute_query(
@@ -268,9 +283,12 @@ class App:
         """Let user register in the customer registry."""
         self._clear_screen()
 
-        name = self._user_varchar_response("Full name:", 0, 255)
-        phone_no = self._user_int_response("Phone number", 0, 10)
-        email = self._user_varchar_response("Email:", 0, 255)
+        try:
+            name = self._user_varchar_response("Full name:", 0, 255)
+            phone_no = self._user_int_response("Phone number", 0, 10)
+            email = self._user_varchar_response("Email:", 0, 255)
+        except SystemExit:
+            return None
         
         try:
             db.cursor.execute(
@@ -280,7 +298,7 @@ class App:
             db.con.commit()
         except Exception as e:
             print(e)
-            return 1
+            return None
 
         return [[f"Successfully registered user {name}!"]]
 
@@ -298,19 +316,29 @@ class App:
         stations = [row[0] for row in db.cursor.fetchall()]
 
         # Get user respons
-        try:
-            response_station_1 = stations[self._user_option_response("Select a start", stations)]
-            stations.remove(response_station_1)
-            response_station_2 = stations[self._user_option_response("Select a destination station", stations)]
-            # TODO User date response!!!!!!!
-        except SystemExit:
-            return
+        while True:
+            try:
+                response_station_1 = stations[self._user_option_response("Select a start", stations)]
+                stations.remove(response_station_1)
+                try: 
+                    response_station_2 = stations[self._user_option_response("Select a destination station", stations)]
+                    try:
+                        # date, time = self._user_datetime_response()
+                        implemented_dates = ["2023-04-03", "2023-04-04"] #temporary
+                        date = implemented_dates[self._user_option_response("Select a date", implemented_dates)] # temporary
+                        break
+                    except SystemExit:
+                        continue # Exit datetime selection
+                except SystemExit:
+                    continue # Exit stop station selection
+            except SystemExit:
+                return None
 
         # Get table of rows that match the query
         table = self._execute_query(
             db, 
             "queries/routes_between_stations.sql", 
-            {"start_station" : response_station_1, "end_station" : response_station_2, "date_":"2023-04-03"}
+            {"start_station" : response_station_1, "end_station" : response_station_2, "date_": date}
         )
         if kwargs.get("ret_station"):
             return table, response_station_1, response_station_2
@@ -364,9 +392,9 @@ class App:
                     continue # Exit route selection
 
             except SystemExit:
-                return
+                return None
             except TypeError:
-                return "TypeError"
+                return None
 
         # TODO create query to book seats (e.i.) insert into Ticket
         return [["Successfully booked seat(s) {tickets}"]]
