@@ -346,12 +346,14 @@ class App:
 
         while True:
             try:
-                # Select route 
+                # Select stations and date
                 routes, start_station, end_station = self.seach_betwean_stops(db, ret_station=True)
 
                 try: 
+                    # Select train occurance
                     options = ["  ".join(route) for route in routes]
                     route_name, route_time, route_date = routes[self._user_option_response("Select a desired route", options)]
+
                     # Select car
                     cars = self._execute_query(db, "queries/get_cars.sql", {"train_route":route_name})
                     options = self._format_car_table(cars)
@@ -367,7 +369,7 @@ class App:
                         "SELECT TSS.SubSectionNo FROM TrackSubSection AS TSS WHERE TSS.EndsAt = :end_station",
                         {"end_station":end_station}
                     ).fetchall()[0][0]
-                    print(start_sec_no, end_sec_no)
+                    if start_sec_no > end_sec_no: start_sec_no, end_sec_no = end_sec_no, start_sec_no
 
                     # Find reserved seats
                     params = {
@@ -379,6 +381,7 @@ class App:
                     }
                     tickets = [ticket[0] for ticket in self._execute_query(db, "queries/get_taken_seats.sql", params)]
 
+                    # Check if sleep car
                     if n_compartments:
                         n_rows = n_compartments
                         seats_per_row = 2
@@ -392,7 +395,10 @@ class App:
                     if len(tickets) > 0: 
                         options = np.delete(options, np.array(tickets)-1).tolist() # remove reseved seats
                     car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets) # visualization of car (str)
-                    user_booking = options[self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)]
+
+                    user_choice_indeces = self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
+                    print(user_choice_indeces)
+                    user_booking = np.array(options)[np.array(user_choice_indeces)].tolist() #need numpy to slice list of indeces
 
                     # Get time
                     now = datetime.now()
@@ -425,7 +431,7 @@ class App:
                         params["place_no"] = seat
                         db.cursor.execute(
                             "INSERT INTO Ticket(OrderID, CarID, PlaceNo, NameOfRoute, StartStation, EndStation, RunDate)\
-                            VALUES (:order_id, :car_id, :place_no, :route_name, :start_station, :end_station :run_date)",
+                            VALUES (:order_id, :car_id, :place_no, :route_name, :start_station, :end_station, :run_date);",
                             params
                         )
                         db.con.commit()
