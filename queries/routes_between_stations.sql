@@ -3,32 +3,46 @@ User input:
     date_
     start_station
     end_station
+    time_
 */
 
 
 
-SELECT DISTINCT TR.Name, RS.TimeOfDay, TOCC.RunDate
+SELECT DISTINCT TR.Name, RS.TimeOfDay, TOCC.RunDate ---TODO   after tidspunkt !!!!!!!
 FROM 
     ((TrainOccurance AS TOCC INNER JOIN TrainRoute AS TR 
-    ON (TOCC.NameOfRoute = TR.Name))
+        ON (TOCC.NameOfRoute = TR.Name))
     INNER JOIN RouteStop AS RS 
-    ON (TR.Name = RS.NameOfRoute)) 
-    INNER JOIN RouteStop AS RS2 ON (RS.NameOfRoute = RS2.NameOfRoute)
+        ON (TR.Name = RS.NameOfRoute)) 
+    INNER JOIN RouteStop AS RS2 
+        ON (RS.NameOfRoute = RS2.NameOfRoute)
+    INNER JOIN TrackSubSection AS TSS1
+        ON (RS.Station = TSS1.StartsAt)
+    INNER JOIN TrackSubSection AS TSS2
+        ON (RS2.Station = TSS2.EndsAt)
     WHERE
-    RS.Station = :start_station AND RS2.Station = :end_station AND TOCC.RunDate = :date_
+    RS.Station = :start_station AND RS2.Station = :end_station AND TOCC.RunDate = :date_ 
+    AND   RS.TimeOfDay >= :time_  AND  TSS1.SubSectionNo <= TSS2.SubSectionNo
     --ORDER BY TOCC.Rundate ASC, RS.TimeOfDay ASC
 
 UNION
 
+    
 SELECT DISTINCT TR.Name, RS.TimeOfDay, TOCC.RunDate
 FROM 
     ((TrainOccurance AS TOCC INNER JOIN TrainRoute AS TR 
-    ON (TOCC.NameOfRoute = TR.Name))
+        ON (TOCC.NameOfRoute = TR.Name))
     INNER JOIN RouteStop AS RS 
-    ON (TR.Name = RS.NameOfRoute)) 
-    INNER JOIN RouteStop AS RS2 ON (RS.NameOfRoute = RS2.NameOfRoute)
+        ON (TR.Name = RS.NameOfRoute)) 
+    INNER JOIN RouteStop AS RS2 
+        ON (RS.NameOfRoute = RS2.NameOfRoute)
+    INNER JOIN TrackSubSection AS TSS1
+        ON (RS.Station = TSS1.StartsAt)
+    INNER JOIN TrackSubSection AS TSS2
+        ON (RS2.Station = TSS2.EndsAt)    
     WHERE
     RS.Station = :start_station AND RS2.Station = :end_station AND TOCC.RunDate = (SELECT DATE(:date_, '+1 day'))
+    AND  TSS1.SubSectionNo <= TSS2.SubSectionNo
     ORDER BY TOCC.Rundate ASC, RS.TimeOfDay ASC;
 
 
