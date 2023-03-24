@@ -2,9 +2,12 @@
 Input: customer_id
 */
 
+-- TODO Only show FUTURE orders! need current time
 
-SELECT DISTINCT C1.CustomerID, TOS1.StartStation, RS1.TimeOfDay, TOS1.EndStation,
-(SELECT DISTINCT RS2.TimeOfDay
+SELECT  DISTINCT C1.CustomerID, P.PlaceNo, RS1.Station /*TOS1.StartStation*/, RS1.TimeOfDay, TOS1.EndStation
+/*
+,--PlassNr
+(SELECT RS2.TimeOfDay  -- Finding EndStop Arrival Time
     FROM Customer as C2 
         INNER JOIN CustomerOrder AS CO2 
                 ON C2.CustomerID = CO2.CustomerID
@@ -20,7 +23,7 @@ SELECT DISTINCT C1.CustomerID, TOS1.StartStation, RS1.TimeOfDay, TOS1.EndStation
                 ON TR2.Name = RS2.NameOfRoute
     WHERE 
         RS2.Station = TOS2.EndStation 
-        AND C2.CustomerID = 1)
+        AND C2.CustomerID = :customer_id) */
 
 
 -- ,TOS2.EndStation, RS2.TimeOfDay
@@ -32,15 +35,20 @@ FROM Customer as C1
     INNER JOIN TicketOnSection AS TOS1
         ON T1.TicketNo = TOS1.TicketNo
     INNER JOIN TrainOccurance AS TO1 
-        ON T1.NameOfRoute = TO1.NameOfRoute
+        ON T1.NameOfRoute = TO1.NameOfRoute AND  T1.RunDate = TO1.RunDate --ENDRET!! ta med lenger opp
     INNER JOIN TrainRoute AS TR1
         ON TO1.NameOfRoute = TR1.Name
-    INNER JOIN RouteStop AS RS1
+   INNER JOIN RouteStop AS RS1
         ON TR1.Name = RS1.NameOfRoute
+       
+
+    INNER JOIN Placement AS P 
+        ON T1.PlaceNo = P.PlaceNo
 
  WHERE 
-        RS1.Station = TOS1.StartStation 
-        AND C1.CustomerID = 1;
+         RS1.Station = TOS1.StartStation 
+        AND
+        C1.CustomerID = :customer_id;
 
 
    /* INNER JOIN
