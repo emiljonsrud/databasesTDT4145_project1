@@ -360,15 +360,10 @@ class App:
                     cars = self._execute_query(db, "queries/get_cars.sql", {"train_route":route_name})
                     options = self._format_car_table(cars)
                     car = cars[self._user_option_response("Select a car. (Car number, Car type)", options)]
-
+                    car_id, car_no, n_rows, seats_per_row, n_compartments = car
 
                     try:
-                        # Select seat
-                        car_id, car_no, n_rows, seats_per_row, n_compartments = car
-                        if n_compartments:
-                            n_rows = n_compartments
-                            seats_per_row = 2
-
+                        # Find reserved seats
                         params = {
                             "run_date" : route_date,
                             "name_of_route" : route_name,
@@ -378,21 +373,23 @@ class App:
                         }
                         tickets = [ticket[0] for ticket in self._execute_query(db, "queries/get_taken_seats.sql", params)]
 
-                        options = np.delete(np.arange(1, (2*n_rows)+1), np.array(tickets)-1).tolist()
+                        if n_compartments:
+                            n_rows = n_compartments
+                            seats_per_row = 2
+                            # One bed reserves a whole coupe
+                            for ticket in tickets.copy():
+                                if ticket%2: tickets.append(ticket+1)
+                                else: tickets.appen(ticket-1)
 
+                        # Select seat
+                        options = np.delete(np.arange(1, (2*n_rows)+1), np.array(tickets)-1).tolist() # remove reseved seats
                         car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets)
                         user_booking = self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
 
-                    except SystemExit:
-                        continue # Exit seat selection
-
-                except SystemExit:
-                    continue # Exit route selection
-
-            except SystemExit:
-                return None
-            except TypeError:
-                return None
+                    except SystemExit: continue # Exit seat selection
+                except SystemExit: continue # Exit route selection
+            except SystemExit: return None # Exit to main menu
+            except TypeError: return None
 
         # TODO create query to book seats (e.i.) insert into Ticket
         return [["Successfully booked seat(s) {tickets}"]]
