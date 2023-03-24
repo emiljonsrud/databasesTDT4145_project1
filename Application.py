@@ -6,6 +6,7 @@ from tabulate import tabulate
 from simple_term_menu import TerminalMenu
 from os import system
 import time
+from datetime import datetime
 import numpy as np
 # --- }}}
 
@@ -16,9 +17,8 @@ class App:
         """Start the application"""
 
         db = DB("test.db")
-        while True:
-            app._clear_screen()
-            self._main_menu(db)
+        app._clear_screen()
+        self._main_menu(db)
 
 # --- Internal functions --- {{{
     def _main_menu(self, db: DB):
@@ -36,19 +36,19 @@ class App:
         while True:
             try:
                 user_response = self._user_option_response(msg, options)
-                break
             except SystemExit:
-                exit = self._user_option_response("Are you sure you want to exit?", ["No", "Yes"])
-                if exit:
-                    return
-                continue
-
-        try:
-            ret = functions.get(options[user_response])(db)
-            self._user_option_response(ret, ["Continue"])
-        except SystemExit:
-            pass
-        return
+                try: 
+                    exit = self._user_option_response("Are you sure you want to exit?", ["No", "Yes"])
+                except SystemExit: 
+                    continue # Continue to fnc selection
+                if exit: return # Exit menu
+                else: continue # Continue to fnc selection
+            try:
+                ret = self._format_rows(functions.get(options[user_response])(db), tablefmt = "rounded_grid")
+                if ret:
+                    self._clear_screen()
+                    self._user_option_response(ret, ["Back to main menu"]) # Give user time to view fnc output
+            except SystemExit: continue # Continue to function selection
 
     # --- SQL --- {{{
     def _execute_query(self, db: DB, query_path: str, params: dict):
@@ -78,6 +78,7 @@ class App:
         """Clear output screan"""
         system("clear")
 
+        # --- User response --- {{{
     def _user_option_response(self, msg: str, options: list, **kwargs) -> str:
         """Get a users respons given a list of alternatives.
         Inputs
@@ -124,6 +125,8 @@ class App:
             except EOFError:
                 feedback = "Enter a value"
                 continue
+            except KeyboardInterrupt:
+                raise SystemExit
             if len(respons) > max_len:
                 feedback = "Too many characters. Try again."
                 continue
@@ -152,7 +155,7 @@ class App:
             if feedback:
                 print(feedback)
                 feedback = ""
-                time.sleep(2)
+                time.sleep(1.5)
             self._clear_screen()
 
             try:
@@ -163,6 +166,8 @@ class App:
             except ValueError:
                 feedback = "Input an numeric value"
                 continue
+            except KeyboardInterrupt:
+                raise SystemExit
             if len(str(response)) > max_len:
                 feedback = "Too many numbers. Try again."
                 continue
@@ -173,7 +178,18 @@ class App:
                 # Valid input, break the loop
                 break
         return response
+    def _user_datetime_response(self):
+        """Gets users response for date"""
+        year = str(input("Enter a year (YYYY): "))
+        month = str(input("Enter a month (MM): "))
+        day = str(input("Enter a day (DD): "))
+        hour = str(input("Enter an hour (HH): "))
+        minute = str(input("Enter a minute (MM): "))
+        
+        return "-".join([year, month, day]), ":".join([hour, minute])
 
+        # --- }}}
+        # --- Formatters --- {{{
     def _format_rows(self, rows, **kwargs) -> str:
         """Formats the rows of an returned sql-query into a nice table."""
         return tabulate(rows, **kwargs)    
@@ -195,15 +211,10 @@ class App:
             mid_seat = int(np.ceil(seats_per_row/2))
         n_seats = n_rows * seats_per_row
 
-        # Verify validity of reserved_seats
-        if n_seats < max(reserved_seats):
-            raise ValueError(f"Only {n_seats} available. Can not reserve seat {max(reserved_seats)}")
-
         # Mark reseved seats
         seats = np.arange(1, n_seats+1).tolist()
         for i in reserved_seats:
             seats[i-1] = "🚫"
-
 
         # Divide into two columns
         formatted_seats = [[" " for _ in range(2)] for _ in range(n_rows)]
@@ -215,11 +226,20 @@ class App:
 
             formatted_seats[i][0] = "".join(left_col)
             formatted_seats[i][1] = "".join(right_col)
-
         return self._format_rows(formatted_seats, tablefmt="rounded_grid", colalign=("center","center"))
-        
-    # --- }}}
 
+    def _format_car_table(self, table):
+        '''Formats a (CarID, CarNo, NumOfRows, SeatsPerRow, NumOfCompartments)
+            table into a list of ["CarNo  CarType"].
+        '''
+        formatted_list = [""]*len(table)
+        for i, row in enumerate(table):
+            car_type = "Sleep car" if row[4] else "Chair car"
+            formatted_list[i] = f"{row[1]:>2} {car_type}"
+        return formatted_list
+
+        # --- }}}
+    # --- }}}
 # --- }}}
 
 # --- User functions --- {{{
@@ -241,15 +261,15 @@ class App:
             response_day = weekdays[self._user_option_response("Select a weekday", weekdays, show_shortcut_hints=True)]
             response_station = stations[self._user_option_response("Select a station", stations, show_shortcut_hints=True)]
         except SystemExit:
-            return
+            return None
 
         # Get table of rows that match the query
-        table = self._format_rows(self._execute_query(
+        table = self._execute_query(
             db, 
             "queries/route_on_day.sql", 
             {"weekday" : response_day, "station" : response_station}
-        ), tablefmt="rounded_grid")
-        print(table)
+        )
+        return table
 
     # --- }}}
     # --- Register user {{{
@@ -257,9 +277,12 @@ class App:
         """Let user register in the customer registry."""
         self._clear_screen()
 
-        name = self._user_varchar_response("Full name:", 0, 255)
-        phone_no = self._user_int_response("Phone number", 0, 10)
-        email = self._user_varchar_response("Email:", 0, 255)
+        try:
+            name = self._user_varchar_response("Full name:", 0, 255)
+            phone_no = self._user_int_response("Phone number", 0, 10)
+            email = self._user_varchar_response("Email:", 0, 255)
+        except SystemExit:
+            return None
         
         try:
             db.cursor.execute(
@@ -269,15 +292,17 @@ class App:
             db.con.commit()
         except Exception as e:
             print(e)
-            return 1
+            return None
 
-        print("Successfully registered user!")
-        return 0
+        return [[f"Successfully registered user {name}!"]]
 
     # --- }}}
     # --- Search routes between stops --- {{{
-    def seach_betwean_stops(self, db):
-        """Search trainroutes between two stops"""
+    def seach_betwean_stops(self, db: DB, **kwargs):
+        """Search trainroutes between two stops
+        -- Keyword Arguments:
+            * ret_station: bool (return start and stop stations)
+        """
         self._clear_screen()
 
         # Get all stations
@@ -285,46 +310,142 @@ class App:
         stations = [row[0] for row in db.cursor.fetchall()]
 
         # Get user respons
-        try:
-            response_station_1 = self._user_option_response("Select a start", stations)
-            stations.remove(response_station_1)
-            response_station_2 = self._user_option_response("Select a destination station", stations)
-        except SystemExit:
-            return
+        while True:
+            try:
+                response_station_1 = stations[self._user_option_response("Select a start", stations)]
+                stations.remove(response_station_1)
+                try: 
+                    response_station_2 = stations[self._user_option_response("Select a destination station", stations)]
+                    try:
+                        # date, time = self._user_datetime_response()
+                        implemented_dates = ["2023-04-03", "2023-04-04"] #temporary
+                        time_ = self._user_varchar_response("Please select a time (hhmm)", 4, 4)
+                        time_formatted = f"{time_[:2]}:{time_[2:]}"
+                        print(time_formatted)
+
+                        date = implemented_dates[self._user_option_response("Select a date", implemented_dates)] # temporary
+                        break
+                    except SystemExit:
+                        continue # Exit datetime selection
+                except SystemExit:
+                    continue # Exit stop station selection
+            except SystemExit:
+                return None
 
         # Get table of rows that match the query
-        table = self._format_rows(self._execute_query(
+        table = self._execute_query(
             db, 
             "queries/routes_between_stations.sql", 
-            {"start_station" : response_station_1, "end_station" : response_station_2, "date_":"2023-04-03"}
-        ))
-        print(table)
+            {"start_station" : response_station_1, "end_station" : response_station_2, "date_": date, "time_":time_formatted}
+        )
+        if kwargs.get("ret_station"):
+            return table, response_station_1, response_station_2
+        else:
+            return table
 
     # --- }}}
     # --- Purchase ticket --- {{{
     def purachase_ticket(self, db: DB):
         """Let user purchase available tickets from desired train route."""
-        # TODO create get available tickets query
 
-        #########################
-        # TEST VARIABLES:
-        tickets = [1, 6, 8]
-        n_rows = 0
-        seats_per_row = 0
-        n_compartments = 4
-        #########################
+        while True:
+            try:
+                # Select stations and date
+                routes, start_station, end_station = self.seach_betwean_stops(db, ret_station=True)
 
-        car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets)
+                try: 
+                    # Select train occurance
+                    options = ["  ".join(route) for route in routes]
+                    route_name, route_time, route_date = routes[self._user_option_response("Select a desired route", options)]
 
-        # options = np.delete(np.arange(1, n_rows*seats_per_row+1), np.array(tickets)-1).tolist()
-        options = np.delete(np.arange(1, (2*n_compartments)+1), np.array(tickets)-1).tolist()
+                    # Select car
+                    cars = self._execute_query(db, "queries/get_cars.sql", {"train_route":route_name})
+                    options = self._format_car_table(cars)
+                    car = cars[self._user_option_response("Select a car. (Car number, Car type)", options)]
+                    car_id, car_no, n_rows, seats_per_row, n_compartments = car
 
-        try:
-            user_booking = self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
-        except SystemExit:
-            return
+                    # Find start and stop subsection numbers
+                    start_sec_no = db.cursor.execute(
+                        "SELECT TSS.SubSectionNo FROM TrackSubSection AS TSS WHERE TSS.StartsAt = :start_station",
+                        {"start_station":start_station}
+                    ).fetchall()[0][0]
+                    end_sec_no = db.cursor.execute(
+                        "SELECT TSS.SubSectionNo FROM TrackSubSection AS TSS WHERE TSS.EndsAt = :end_station",
+                        {"end_station":end_station}
+                    ).fetchall()[0][0]
+                    if start_sec_no > end_sec_no: start_sec_no, end_sec_no = end_sec_no, start_sec_no
 
-        # TODO create query to book seats (e.i.) insert into Ticket
+                    # Find reserved seats
+                    params = {
+                        "run_date" : route_date,
+                        "name_of_route" : route_name,
+                        "car_id" : car_id,
+                        "start_sec_no":start_sec_no, 
+                        "end_sec_no":end_sec_no
+                    }
+                    tickets = [ticket[0] for ticket in self._execute_query(db, "queries/get_taken_seats.sql", params)]
+
+                    # Check if sleep car
+                    if n_compartments:
+                        n_rows = n_compartments
+                        seats_per_row = 2
+                        # One bed reserves a whole coupe
+                        for ticket in tickets.copy():
+                            if ticket%2: tickets.append(ticket+1)
+                            else: tickets.appen(ticket-1)
+
+                    # Select seat
+                    options = np.arange(1, seats_per_row*n_rows+1)
+                    if len(tickets) > 0: 
+                        options = np.delete(options, np.array(tickets)-1).tolist() # remove reseved seats
+                    car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets) # visualization of car (str)
+
+                    user_choice_indeces = self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
+                    print(user_choice_indeces)
+                    user_booking = np.array(options)[np.array(user_choice_indeces)].tolist() #need numpy to slice list of indeces
+
+                    # Get time
+                    now = datetime.now()
+                    date = now.strftime("%Y-%m-%d")
+                    time_ = now.strftime("%H:%M")
+                    print(date, time)
+
+                    # Get customer id, this solution is not optimal, but there is no login system
+                    customer_id = self._user_int_response("What is your custmer-id?", 0, 4)
+
+                    # Create CustomerOrder
+                    db.cursor.execute(
+                        "INSERT INTO CustomerOrder(OrderDate, OrderTime, CustomerID)\
+                        VALUES (:order_date, :order_time, :customer_id);",
+                        {"order_date":date, "order_time":time_, "customer_id":customer_id}
+                    )
+                    db.con.commit()
+                    order_id = db.cursor.execute("SELECT last_insert_rowid();").fetchall()[0][0]
+
+                    # Create Tickets
+                    params = {
+                        "order_id":order_id,
+                        "car_id":car_id,
+                        "route_name":route_name,
+                        "start_station":start_station,
+                        "end_station":end_station,
+                        "run_date":route_date
+                    }
+                    for seat in user_booking:
+                        params["place_no"] = seat
+                        db.cursor.execute(
+                            "INSERT INTO Ticket(OrderID, CarID, PlaceNo, NameOfRoute, StartStation, EndStation, RunDate)\
+                            VALUES (:order_id, :car_id, :place_no, :route_name, :start_station, :end_station, :run_date);",
+                            params
+                        )
+                        db.con.commit()
+
+                except SystemExit: continue # Exit to route selection
+            except SystemExit: return None # Exit to main menu
+            except TypeError: return None
+            break # No exceptions! Break the loop
+
+        return [["Successfully booked seat(s):", *user_booking, f"With order id {order_id}"]]
 
 
     # --- }}}
@@ -342,7 +463,7 @@ if __name__=="__main__":
     # print(app._user_response(WeekDay))
     # print(app._user_varchar_response(4, 255))
 
-    # db = DB("test.db")
+    db = DB("test.db")
     # app._clear_screen()
     # app.view_train_routes(db)
     # app.register_user(db)
