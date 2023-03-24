@@ -35,7 +35,6 @@ class App:
         while True:
             try:
                 user_response = self._user_option_response(msg, options)
-                break
             except SystemExit:
                 try: 
                     exit = self._user_option_response("Are you sure you want to exit?", ["No", "Yes"])
@@ -44,13 +43,12 @@ class App:
                 if exit:
                     return
                 continue
-        try:
-            ret = self._format_rows(functions.get(options[user_response])(db), tablefmt = "rounded_grid")
-            if ret:
-                self._user_option_response(ret, ["Back to main menu"])
-        except SystemExit:
-            pass
-        return
+            try:
+                ret = self._format_rows(functions.get(options[user_response])(db), tablefmt = "rounded_grid")
+                if ret:
+                    self._user_option_response(ret, ["Back to main menu"])
+            except SystemExit:
+                continue
 
     # --- SQL --- {{{
     def _execute_query(self, db: DB, query_path: str, params: dict):
