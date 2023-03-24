@@ -6,6 +6,7 @@ from tabulate import tabulate
 from simple_term_menu import TerminalMenu
 from os import system
 import time
+from datetime import datetime
 import numpy as np
 # --- }}}
 
@@ -38,17 +39,16 @@ class App:
             except SystemExit:
                 try: 
                     exit = self._user_option_response("Are you sure you want to exit?", ["No", "Yes"])
-                except SystemExit:
-                    continue
-                if exit:
-                    return
-                continue
+                except SystemExit: 
+                    continue # Continue to fnc selection
+                if exit: return # Exit menu
+                else: continue # Continue to fnc selection
             try:
                 ret = self._format_rows(functions.get(options[user_response])(db), tablefmt = "rounded_grid")
                 if ret:
-                    self._user_option_response(ret, ["Back to main menu"])
-            except SystemExit:
-                continue
+                    self._clear_screen()
+                    self._user_option_response(ret, ["Back to main menu"]) # Give user time to view fnc output
+            except SystemExit: continue # Continue to function selection
 
     # --- SQL --- {{{
     def _execute_query(self, db: DB, query_path: str, params: dict):
@@ -211,10 +211,6 @@ class App:
             mid_seat = int(np.ceil(seats_per_row/2))
         n_seats = n_rows * seats_per_row
 
-        # Verify validity of reserved_seats
-        if n_seats < max(reserved_seats):
-            raise ValueError(f"Only {n_seats} available. Can not reserve seat {max(reserved_seats)}")
-
         # Mark reseved seats
         seats = np.arange(1, n_seats+1).tolist()
         for i in reserved_seats:
@@ -352,47 +348,74 @@ class App:
             try:
                 # Select route 
                 routes, start_station, end_station = self.seach_betwean_stops(db, ret_station=True)
-                options = ["  ".join(route) for route in routes]
-                route_name, route_time, route_date = routes[self._user_option_response("Select a desired route", options)]
 
                 try: 
+                    options = ["  ".join(route) for route in routes]
+                    route_name, route_time, route_date = routes[self._user_option_response("Select a desired route", options)]
                     # Select car
                     cars = self._execute_query(db, "queries/get_cars.sql", {"train_route":route_name})
                     options = self._format_car_table(cars)
                     car = cars[self._user_option_response("Select a car. (Car number, Car type)", options)]
                     car_id, car_no, n_rows, seats_per_row, n_compartments = car
 
-                    try:
-                        # Find reserved seats
-                        params = {
-                            "run_date" : route_date,
-                            "name_of_route" : route_name,
-                            "car_id" : car_id,
-                            "start_station" : start_station,
-                            "end_station" : end_station
-                        }
-                        tickets = [ticket[0] for ticket in self._execute_query(db, "queries/get_taken_seats.sql", params)]
+                    # Find reserved seats
+                    params = {
+                        "run_date" : route_date,
+                        "name_of_route" : route_name,
+                        "car_id" : car_id,
+                        "start_station" : start_station,
+                        "end_station" : end_station
+                    }
+                    tickets = [ticket[0] for ticket in self._execute_query(db, "queries/get_taken_seats.sql", params)]
 
-                        if n_compartments:
-                            n_rows = n_compartments
-                            seats_per_row = 2
-                            # One bed reserves a whole coupe
-                            for ticket in tickets.copy():
-                                if ticket%2: tickets.append(ticket+1)
-                                else: tickets.appen(ticket-1)
+                    if n_compartments:
+                        n_rows = n_compartments
+                        seats_per_row = 2
+                        # One bed reserves a whole coupe
+                        for ticket in tickets.copy():
+                            if ticket%2: tickets.append(ticket+1)
+                            else: tickets.appen(ticket-1)
 
-                        # Select seat
-                        options = np.delete(np.arange(1, (2*n_rows)+1), np.array(tickets)-1).tolist() # remove reseved seats
-                        car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets)
-                        user_booking = self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
+                    # Select seat
+                    options = np.arange(1, seats_per_row*n_rows+1)
+                    if len(tickets) > 0: 
+                        options = np.delete(options, np.array(tickets)-1).tolist() # remove reseved seats
+                    car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets) # visualization of car (str)
+                    user_booking = options[self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)]
 
-                    except SystemExit: continue # Exit seat selection
-                except SystemExit: continue # Exit route selection
+                    # Get time
+                    now = datetime.now()
+                    date = now.strftime("%Y-%m-%d")
+                    time_ = now.strftime("%H:%M")
+                    print(date, time)
+
+                    # Get customer id, this solution is not optimal, but there is no login system
+                    customer_id = self._user_int_response("What is your custmer-id?", 0, 4)
+
+                    # Create CustomerOrder
+                    db.cursor.execute(
+                        "INSERT INTO CustomerOrder(OrderDate, OrderTime, CustomerID)\
+                        VALUES (:order_date, :order_time, :customer_id);",
+                        {"order_date":date, "order_time":time_, "customer_id":customer_id}
+                    )
+                    db.con.commit()
+                    order_id = db.cursor.execute("SELECT last_insert_rowid();").fetchall()[0][0]
+
+                    # Create Tickets
+                    for seat in user_booking:
+                        db.cursor.execute(
+                            "INSERT INTO Ticket(OrderID, CarID, PlaceNo, NameOfRoute, RunDate)\
+                            VALUES (:order_id, :car_id, :place_no, :route_name, :run_date)",
+                            {"order_id":order_id,"car_id":car_id,"place_no":seat,"route_name":route_name,"run_date":route_date}
+                        )
+                        db.con.commit()
+
+                except SystemExit: continue # Exit to route selection
             except SystemExit: return None # Exit to main menu
             except TypeError: return None
+            break # No exceptions! Break the loop
 
-        # TODO create query to book seats (e.i.) insert into Ticket
-        return [["Successfully booked seat(s) {tickets}"]]
+        return [["Successfully booked seat(s):", *user_booking, f"With order id {order_id}"]]
 
 
     # --- }}}
