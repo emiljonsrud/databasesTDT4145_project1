@@ -30,7 +30,3 @@ WHERE ((TSS1.SubSectionNo <= :start_sec_no AND TSS2.SubSectionNo >= :start_sec_n
     AND T.RunDate = :run_date
     AND T.NameOfRoute = :name_of_route
     AND T.CarID = :car_id
-
-
-
-
