@@ -28,7 +28,8 @@ class App:
             "View train routes passing through a station on a weekday" : self.view_train_routes,
             "Register a new user" : self.register_user,
             "Search train routes between two stops" : self.seach_betwean_stops,
-            "Purchase a ticket" : self.purachase_ticket
+            "Purchase a ticket" : self.purachase_ticket,
+            "View upcomming orders" : self.view_customer_orders
         }
 
         options = list(functions.keys())
@@ -450,9 +451,10 @@ class App:
 
     # --- }}}
     # --- View customer orders --- {{{
-    def view_customer_orders(self):
+    def view_customer_orders(self, db: DB):
         """View custmer orders"""
-        pass
+        customer_id = self._user_int_response("Write your customer ID", 1, 4)
+        return self._execute_query(db, "queries/orders.sql", {"customer_id":customer_id})
 
     # --- }}}
         
