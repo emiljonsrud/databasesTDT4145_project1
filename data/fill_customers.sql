@@ -23,6 +23,6 @@ VALUES
 INSERT INTO Placement(PlaceNo, CarID)
 VALUES
   (2, 2000),
-  (4, 2000);
+  (3, 2000);
 
 
