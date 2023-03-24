@@ -155,7 +155,7 @@ class App:
             if feedback:
                 print(feedback)
                 feedback = ""
-                time.sleep(2)
+                time.sleep(1.5)
             self._clear_screen()
 
             try:
@@ -319,6 +319,10 @@ class App:
                     try:
                         # date, time = self._user_datetime_response()
                         implemented_dates = ["2023-04-03", "2023-04-04"] #temporary
+                        time_ = self._user_varchar_response("Please select a time (hhmm)", 4, 4)
+                        time_formatted = f"{time_[:2]}:{time_[2:]}"
+                        print(time_formatted)
+
                         date = implemented_dates[self._user_option_response("Select a date", implemented_dates)] # temporary
                         break
                     except SystemExit:
@@ -332,7 +336,7 @@ class App:
         table = self._execute_query(
             db, 
             "queries/routes_between_stations.sql", 
-            {"start_station" : response_station_1, "end_station" : response_station_2, "date_": date}
+            {"start_station" : response_station_1, "end_station" : response_station_2, "date_": date, "time_":time_formatted}
         )
         if kwargs.get("ret_station"):
             return table, response_station_1, response_station_2
