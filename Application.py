@@ -34,6 +34,7 @@ class App:
         msg = "What would you like to do?"
         while True:
             try:
+                clear_screen()
                 user_response = option_response(msg, options)
             except SystemExit:
                 try: 
@@ -49,7 +50,6 @@ class App:
                     option_response(tabulate(ret, headers="firstrow", tablefmt = "rounded_grid"), ["Back to main menu"]) # Give user time to view fnc output
             except SystemExit: continue # Continue to function selection
 
-    # --- SQL --- {{{
     def _execute_query(self, db: DB, query_path: str, params: dict) -> list[tuple]:
         """Execute a query on a database.
         Inputs
@@ -71,7 +71,6 @@ class App:
         db.cursor.execute(query, params)
         return db.cursor.fetchall()
 
-    # --- }}}
 # --- }}}
 
 # --- User functions --- {{{
@@ -156,13 +155,13 @@ class App:
                         print(time_formatted)
 
                         date = implemented_dates[option_response("Select a date", implemented_dates)] # temporary
-                        break
                     except SystemExit:
                         continue # Exit datetime selection
                 except SystemExit:
                     continue # Exit stop station selection
             except SystemExit:
                 return None
+            break
 
         # Get table of rows that match the query
         table = self._execute_query(
@@ -173,6 +172,8 @@ class App:
         if kwargs.get("ret_station"):
             return table, response_station_1, response_station_2
         else:
+            headers = ("Route", "Date", "Start", "Departure", "End", "Arrival")
+            table.insert(0, headers)
             return table
 
     # --- }}}

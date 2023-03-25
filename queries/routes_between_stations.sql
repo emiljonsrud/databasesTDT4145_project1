@@ -20,11 +20,11 @@ FROM TrainRoute AS TR
     LEFT OUTER JOIN TrackSubSection AS TSS2
         ON RS2.Station = TSS2.StartsAt
 WHERE 
-    RS1.Station = :start_station AND RS2.Station = :end_station AND
-    (     
-    ( TR.SectionMainDirection = 1  AND TSS1.SubSectionNo < TSS2.SubSectionNo) 
-     OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo > TSS2.SubSectionNo)
-     OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo = NULL)
+    RS1.Station = :start_station AND RS2.Station = :end_station 
+    AND (     
+        (TR.SectionMainDirection = 1  AND TSS1.SubSectionNo < TSS2.SubSectionNo) 
+        OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo > TSS2.SubSectionNo)
+        OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo = NULL)
     ) 
     AND TOc.RunDate = :date_
     AND RS1.TimeOfDay >= :time_
@@ -51,6 +51,4 @@ WHERE
      OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo = NULL)
     ) 
     AND TOc.RunDate = (SELECT DATE(:date_, '+1 day'))
-    AND RS1.TimeOfDay >= :time_
-
     ORDER BY TOc.Rundate ASC, RS1.TimeOfDay ASC;
