@@ -1,58 +1,56 @@
 #!/usr/bin/python3
 # --- Imports --- {{{
 from DB import DB
+from formatters import draw_car, format_car_options, tabulate
+from user_interface import clear_screen, option_response, varchar_response, int_response, datetime_response
 
-from tabulate import tabulate
-from simple_term_menu import TerminalMenu
-from os import system
-import time
 from datetime import datetime
 import numpy as np
 # --- }}}
 
 class App:
-    def __init__(self):
-        pass
-    def run(self):
-        """Start the application"""
-
-        db = DB("test.db")
-        app._clear_screen()
-        self._main_menu(db)
-
-# --- Internal functions --- {{{
-    def _main_menu(self, db: DB):
-        """Show a menu for the user to selct a function.""" 
-
-        functions = {
+    def __init__(self) -> None:
+        """
+        
+        """
+        self.functions = {
             "View train routes passing through a station on a weekday" : self.view_train_routes,
             "Register a new user" : self.register_user,
             "Search train routes between two stops" : self.seach_betwean_stops,
             "Purchase a ticket" : self.purachase_ticket,
             "View upcomming orders" : self.view_customer_orders
         }
+    def run(self) -> None:
+        """Start the application"""
+        db = DB("test.db")
+        self._main_menu(db)
 
-        options = list(functions.keys())
+# --- Internal functions --- {{{
+    def _main_menu(self, db: DB) -> None:
+        """Show a menu for the user to selct a function.""" 
+
+
+        options = list(self.functions.keys())
         msg = "What would you like to do?"
         while True:
             try:
-                user_response = self._user_option_response(msg, options)
+                user_response = option_response(msg, options)
             except SystemExit:
                 try: 
-                    exit = self._user_option_response("Are you sure you want to exit?", ["No", "Yes"])
+                    exit = option_response("Are you sure you want to exit?", ["No", "Yes"])
                 except SystemExit: 
                     continue # Continue to fnc selection
                 if exit: return # Exit menu
                 else: continue # Continue to fnc selection
             try:
-                ret = self._format_rows(functions.get(options[user_response])(db), tablefmt = "rounded_grid")
+                ret = self.functions[options[user_response]](db)
                 if ret:
-                    self._clear_screen()
-                    self._user_option_response(ret, ["Back to main menu"]) # Give user time to view fnc output
+                    clear_screen()
+                    option_response(tabulate(ret, tablefmt = "rounded_grid"), ["Back to main menu"]) # Give user time to view fnc output
             except SystemExit: continue # Continue to function selection
 
     # --- SQL --- {{{
-    def _execute_query(self, db: DB, query_path: str, params: dict):
+    def _execute_query(self, db: DB, query_path: str, params: dict) -> list[tuple]:
         """Execute a query on a database.
         Inputs
         :param db: DB object to query
@@ -60,7 +58,7 @@ class App:
         :param params: dictionary containing paramaters for the query.
         
         Output
-        :rows: resulting rows of the query
+        :table: resulting table of the query
 
         Ex:
             contents of sql-file: SELECT * TrainRoute WHERE StartStation = :station;
@@ -74,180 +72,13 @@ class App:
         return db.cursor.fetchall()
 
     # --- }}}
-    # --- UI --- {{{
-    def _clear_screen(self) -> str:
-        """Clear output screan"""
-        system("clear")
-
-        # --- User response --- {{{
-    def _user_option_response(self, msg: str, options: list, **kwargs) -> str:
-        """Get a users respons given a list of alternatives.
-        Inputs
-        :param msg: Message to user describing options
-        :param options: list of options user can choose.
-
-        :Keyword Arguments: passed directly to TerminalMenu.
-
-        Output
-        :out: one element in options
-        Raises SystemExit if user wants to exit.
-        """
-        options = list(map(str, options)).copy()
-
-        terminal_menu = TerminalMenu(options, title=msg, **kwargs)
-        menu_entry_index = terminal_menu.show()
-
-        if menu_entry_index == None:
-            raise SystemExit
-        return menu_entry_index
-
-    def _user_varchar_response(self, msg: str, min_len: int, max_len: int) -> str:
-        """Get users respons for inputing a VARCHAR(255) value.
-
-        -- Inputs
-        :param max_len: maximum length of input.
-        :param min_len: minimum length of inpu
-
-        -- Out
-        :response: string containing user response.
-        """
-        msg += "\n~> "
-        feedback = ""
-
-        while True:
-            if feedback:
-                print(feedback)
-                feedback = ""
-                time.sleep(2)
-            self._clear_screen()
-
-            try:
-                respons = str(input(msg))
-            except EOFError:
-                feedback = "Enter a value"
-                continue
-            except KeyboardInterrupt:
-                raise SystemExit
-            if len(respons) > max_len:
-                feedback = "Too many characters. Try again."
-                continue
-            elif len(respons) < min_len: 
-                feedback  = "Too few characters. Try again."
-                continue
-            else:
-                # Valid input, break the loop
-                break
-        return respons
-
-    def _user_int_response(self, msg: str, min_len, max_len) -> int:
-        """Get users respons for inputing an value.
-
-        -- Inputs
-        :param min_len: minimum length of inpu
-        :param max_len: maximum length of input.
-
-        -- Out
-        :response: string containing user response.
-        """
-        msg += "\n~> "
-        feedback = ""
-
-        while True:
-            if feedback:
-                print(feedback)
-                feedback = ""
-                time.sleep(1.5)
-            self._clear_screen()
-
-            try:
-                response = int(input(msg))
-            except EOFError:
-                feedback = "Enter a value"
-                continue
-            except ValueError:
-                feedback = "Input an numeric value"
-                continue
-            except KeyboardInterrupt:
-                raise SystemExit
-            if len(str(response)) > max_len:
-                feedback = "Too many numbers. Try again."
-                continue
-            elif len(str(response)) < min_len: 
-                feedback = "Too few numbers. Try again."
-                continue
-            else:
-                # Valid input, break the loop
-                break
-        return response
-    def _user_datetime_response(self):
-        """Gets users response for date"""
-        year = str(input("Enter a year (YYYY): "))
-        month = str(input("Enter a month (MM): "))
-        day = str(input("Enter a day (DD): "))
-        hour = str(input("Enter an hour (HH): "))
-        minute = str(input("Enter a minute (MM): "))
-        
-        return "-".join([year, month, day]), ":".join([hour, minute])
-
-        # --- }}}
-        # --- Formatters --- {{{
-    def _format_rows(self, rows, **kwargs) -> str:
-        """Formats the rows of an returned sql-query into a nice table."""
-        return tabulate(rows, **kwargs)    
-        
-    def _format_car(self, n_compartments: int, n_rows: int, seats_per_row: int, reserved_seats: list[int]) -> str:
-        """Formats information about a car into a nice table.
-        -- Inputs
-        :param n_compartments: number of compartments in the carrige (can be 0)
-        :param n_rows: number of rows in the carrige (can be 0)
-        :param seats_per_row: number of seats per row in the car (can be 0)
-        :parram reserved_seats: list of seats that are reserved (1-indexed)
-        """
-        # Assert paramaters depending on car-type
-        if n_compartments:
-            seats_per_row = 2
-            n_rows = n_compartments
-            mid_seat = 0
-        else:
-            mid_seat = int(np.ceil(seats_per_row/2))
-        n_seats = n_rows * seats_per_row
-
-        # Mark reseved seats
-        seats = np.arange(1, n_seats+1).tolist()
-        for i in reserved_seats:
-            seats[i-1] = "🚫"
-
-        # Divide into two columns
-        formatted_seats = [[" " for _ in range(2)] for _ in range(n_rows)]
-        for i in range(n_rows):
-            curr_seat = i*seats_per_row
-
-            left_col = [f"{seats[j]:>3}" for j in range(curr_seat, curr_seat+mid_seat)]
-            right_col = [f"{seats[j]:>3}" for j in range(curr_seat+mid_seat, curr_seat+seats_per_row)]
-
-            formatted_seats[i][0] = "".join(left_col)
-            formatted_seats[i][1] = "".join(right_col)
-        return self._format_rows(formatted_seats, tablefmt="rounded_grid", colalign=("center","center"))
-
-    def _format_car_table(self, table):
-        '''Formats a (CarID, CarNo, NumOfRows, SeatsPerRow, NumOfCompartments)
-            table into a list of ["CarNo  CarType"].
-        '''
-        formatted_list = [""]*len(table)
-        for i, row in enumerate(table):
-            car_type = "Sleep car" if row[4] else "Chair car"
-            formatted_list[i] = f"{row[1]:>2} {car_type}"
-        return formatted_list
-
-        # --- }}}
-    # --- }}}
 # --- }}}
 
 # --- User functions --- {{{
     # --- View train routes {{{
     def view_train_routes(self, db: DB):
         """Let user get information of trainroutes"""
-        self._clear_screen()
+        clear_screen()
 
         # Get all stations
         db.cursor.execute("SELECT Name FROM RailwayStation")
@@ -259,8 +90,8 @@ class App:
 
         # Get user respons
         try:
-            response_day = weekdays[self._user_option_response("Select a weekday", weekdays, show_shortcut_hints=True)]
-            response_station = stations[self._user_option_response("Select a station", stations, show_shortcut_hints=True)]
+            response_day = weekdays[option_response("Select a weekday", weekdays, show_shortcut_hints=True)]
+            response_station = stations[option_response("Select a station", stations, show_shortcut_hints=True)]
         except SystemExit:
             return None
 
@@ -274,14 +105,14 @@ class App:
 
     # --- }}}
     # --- Register user {{{
-    def register_user(self, db: DB) -> int:
+    def register_user(self, db: DB) -> list[tuple] | None:
         """Let user register in the customer registry."""
-        self._clear_screen()
+        clear_screen()
 
         try:
-            name = self._user_varchar_response("Full name:", 0, 255)
-            phone_no = self._user_int_response("Phone number", 0, 10)
-            email = self._user_varchar_response("Email:", 0, 255)
+            name = varchar_response("Full name:", 0, 255)
+            phone_no = int_response("Phone number", 0, 10)
+            email = varchar_response("Email:", 0, 255)
         except SystemExit:
             return None
         
@@ -295,16 +126,16 @@ class App:
             print(e)
             return None
 
-        return [[f"Successfully registered user {name}!"]]
+        return [(f"Successfully registered user {name}!",)]
 
     # --- }}}
     # --- Search routes between stops --- {{{
-    def seach_betwean_stops(self, db: DB, **kwargs):
+    def seach_betwean_stops(self, db: DB, **kwargs) -> list[tuple] | tuple[list[tuple], str, str] | None:
         """Search trainroutes between two stops
         -- Keyword Arguments:
             * ret_station: bool (return start and stop stations)
         """
-        self._clear_screen()
+        clear_screen()
 
         # Get all stations
         db.cursor.execute("SELECT Name FROM RailwayStation")
@@ -313,18 +144,18 @@ class App:
         # Get user respons
         while True:
             try:
-                response_station_1 = stations[self._user_option_response("Select a start", stations)]
+                response_station_1 = stations[option_response("Select a start", stations)]
                 stations.remove(response_station_1)
                 try: 
-                    response_station_2 = stations[self._user_option_response("Select a destination station", stations)]
+                    response_station_2 = stations[option_response("Select a destination station", stations)]
                     try:
-                        # date, time = self._user_datetime_response()
+                        # date, time = datetime_response()
                         implemented_dates = ["2023-04-03", "2023-04-04"] #temporary
-                        time_ = self._user_varchar_response("Please select a time (hhmm)", 4, 4)
+                        time_ = varchar_response("Please select a time (hhmm)", 4, 4)
                         time_formatted = f"{time_[:2]}:{time_[2:]}"
                         print(time_formatted)
 
-                        date = implemented_dates[self._user_option_response("Select a date", implemented_dates)] # temporary
+                        date = implemented_dates[option_response("Select a date", implemented_dates)] # temporary
                         break
                     except SystemExit:
                         continue # Exit datetime selection
@@ -346,7 +177,7 @@ class App:
 
     # --- }}}
     # --- Purchase ticket --- {{{
-    def purachase_ticket(self, db: DB):
+    def purachase_ticket(self, db: DB) -> list[tuple] | None:
         """Let user purchase available tickets from desired train route."""
 
         while True:
@@ -357,12 +188,12 @@ class App:
                 try: 
                     # Select train occurance
                     options = ["  ".join(route) for route in routes]
-                    route_name, route_time, route_date = routes[self._user_option_response("Select a desired route", options)]
+                    route_name, route_time, route_date = routes[option_response("Select a desired route", options)]
 
                     # Select car
                     cars = self._execute_query(db, "queries/get_cars.sql", {"train_route":route_name})
-                    options = self._format_car_table(cars)
-                    car = cars[self._user_option_response("Select a car. (Car number, Car type)", options)]
+                    options = format_car_options(cars)
+                    car = cars[option_response("Select a car. (Car number, Car type)", options)]
                     car_id, car_no, n_rows, seats_per_row, n_compartments = car
 
                     # Find start and stop subsection numbers
@@ -393,15 +224,15 @@ class App:
                         # One bed reserves a whole coupe
                         for ticket in tickets.copy():
                             if ticket%2: tickets.append(ticket+1)
-                            else: tickets.appen(ticket-1)
+                            else: tickets.append(ticket-1)
 
                     # Select seat
                     options = np.arange(1, seats_per_row*n_rows+1)
                     if len(tickets) > 0: 
                         options = np.delete(options, np.array(tickets)-1).tolist() # remove reseved seats
-                    car_overview = self._format_car(n_compartments, n_rows, seats_per_row, tickets) # visualization of car (str)
+                    car_overview = draw_car(n_compartments, n_rows, seats_per_row, tickets) # visualization of car (str)
 
-                    user_choice_indeces = self._user_option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
+                    user_choice_indeces = option_response(msg=car_overview, options=options, multi_select=True, show_multi_select_hint=True)
                     print(user_choice_indeces)
                     user_booking = np.array(options)[np.array(user_choice_indeces)].tolist() #need numpy to slice list of indeces
 
@@ -409,10 +240,9 @@ class App:
                     now = datetime.now()
                     date = now.strftime("%Y-%m-%d")
                     time_ = now.strftime("%H:%M")
-                    print(date, time)
 
                     # Get customer id, this solution is not optimal, but there is no login system
-                    customer_id = self._user_int_response("What is your custmer-id?", 0, 4)
+                    customer_id = int_response("What is your custmer-id?", 0, 4)
 
                     # Create CustomerOrder
                     db.cursor.execute(
@@ -446,14 +276,14 @@ class App:
             except TypeError: return None
             break # No exceptions! Break the loop
 
-        return [["Successfully booked seat(s):", *user_booking, f"With order id {order_id}"]]
+        return [("Successfully booked seat(s):", *user_booking, f"With order id {order_id}",)]
 
 
     # --- }}}
     # --- View customer orders --- {{{
     def view_customer_orders(self, db: DB):
         """View custmer orders"""
-        customer_id = self._user_int_response("Write your customer ID", 1, 4)
+        customer_id = int_response("Write your customer ID", 1, 4)
         return self._execute_query(db, "queries/orders.sql", {"customer_id":customer_id})
 
     # --- }}}
