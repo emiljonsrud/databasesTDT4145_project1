@@ -5,8 +5,7 @@ Input: customer_id
 -- TODO Only show FUTURE orders! need current time
 
 
-SELECT  DISTINCT C1.CustomerID, 
-                 RS1.Station , 
+SELECT  DISTINCT RS1.Station, 
                  T1.EndStation, 
                  RS1.TimeOfDay, 
                  sub_query.TimeOfDay,

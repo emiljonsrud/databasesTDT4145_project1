@@ -46,7 +46,7 @@ class App:
                 ret = self.functions[options[user_response]](db)
                 if ret:
                     clear_screen()
-                    option_response(tabulate(ret, tablefmt = "rounded_grid"), ["Back to main menu"]) # Give user time to view fnc output
+                    option_response(tabulate(ret, headers="firstrow", tablefmt = "rounded_grid"), ["Back to main menu"]) # Give user time to view fnc output
             except SystemExit: continue # Continue to function selection
 
     # --- SQL --- {{{
@@ -284,7 +284,11 @@ class App:
     def view_customer_orders(self, db: DB):
         """View custmer orders"""
         customer_id = int_response("Write your customer ID", 1, 4)
-        return self._execute_query(db, "queries/orders.sql", {"customer_id":customer_id})
+        orders = self._execute_query(db, "queries/orders.sql", {"customer_id":customer_id})
+
+        headers = ("Start", "End", "Departure", "Arrival", "Seat", "Car", "Route")
+        orders.insert(0, headers)
+        return orders
 
     # --- }}}
         
