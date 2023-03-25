@@ -30,7 +30,8 @@ CREATE TABLE TrackSubSection(
 
 --  TrainRoute    
 CREATE TABLE TrainRoute(
-  Name VARCHAR(255) PRIMARY KEY NOT NULL, 
+  Name VARCHAR(255) PRIMARY KEY NOT NULL,
+  SectionMainDirection BOOL NOT NULL, -- Denne er lagt inn etter D1 
   Operator VARCHAR(255), 
   SectionName VARCHAR(255) NOT NULL, 
   FOREIGN KEY(SectionName) REFERENCES TrackSection(Name) ON UPDATE CASCADE ON DELETE CASCADE

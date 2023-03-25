@@ -6,11 +6,11 @@
     DayOfRoute
 */
 
-INSERT INTO TrainRoute(Name, Operator, SectionName)
+INSERT INTO TrainRoute(Name, Operator, SectionMainDirection, SectionName)
 VALUES
-    ("Dagtog-Trondheim-Bodø", "SJ", "Nordlandsbanen"),
-    ("Nattog-Trondheim-Bodø", "SJ", "Nordlandsbanen"),
-    ("Morgentog-Mo_i_Rana-Trondheim", "SJ", "Nordlandsbanen");
+    ("Dagtog-Trondheim-Bodø", "SJ",  1,"Nordlandsbanen"),
+    ("Nattog-Trondheim-Bodø", "SJ",1, "Nordlandsbanen"),
+    ("Morgentog-Mo_i_Rana-Trondheim","SJ", 0,  "Nordlandsbanen");
 
 INSERT INTO RouteStop(Station, NameOfRoute, TimeOfDay)
 VALUES
