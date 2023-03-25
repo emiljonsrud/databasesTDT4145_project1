@@ -2,13 +2,15 @@ from simple_term_menu import TerminalMenu
 from os import system
 import time
 
-
-def clear_screen() -> str:
-    """Clear output screan"""
+def clear_screen() -> None:
+    """Clear the screan, this only works for UNIX systems. 
+    For windows: use system("cls")
+    """
     system("clear")
+    # system("cls")
 
 # --- User response --- {{{
-def option_response(msg: str, options: list, **kwargs) -> str:
+def option_response(msg: str, options: list, **kwargs) -> int | tuple[int]:
     """Get a users respons given a list of alternatives.
     Inputs
     :param msg: Message to user describing options
@@ -107,7 +109,8 @@ def int_response(msg: str, min_len, max_len) -> int:
             # Valid input, break the loop
             break
     return response
-def datetime_response():
+
+def datetime_response() -> tuple[str, str]:
     """Gets users response for date"""
     year = str(input("Enter a year (YYYY): "))
     month = str(input("Enter a month (MM): "))

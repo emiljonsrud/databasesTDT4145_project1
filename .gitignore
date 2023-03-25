@@ -132,4 +132,5 @@ dmypy.json
 # Non-python stuff
 #
 handout_documents/
+.vscode
 

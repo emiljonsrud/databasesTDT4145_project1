@@ -9,7 +9,7 @@ import numpy as np
 # --- }}}
 
 class App:
-    def __init__(self):
+    def __init__(self) -> None:
         """
         
         """
@@ -20,13 +20,13 @@ class App:
             "Purchase a ticket" : self.purachase_ticket,
             "View upcomming orders" : self.view_customer_orders
         }
-    def run(self):
+    def run(self) -> None:
         """Start the application"""
         db = DB("test.db")
         self._main_menu(db)
 
 # --- Internal functions --- {{{
-    def _main_menu(self, db: DB):
+    def _main_menu(self, db: DB) -> None:
         """Show a menu for the user to selct a function.""" 
 
 
@@ -43,14 +43,14 @@ class App:
                 if exit: return # Exit menu
                 else: continue # Continue to fnc selection
             try:
-                ret = tabulate(self.functions.get(options[user_response])(db), tablefmt = "rounded_grid")
+                ret = self.functions[options[user_response]](db)
                 if ret:
                     clear_screen()
-                    option_response(ret, ["Back to main menu"]) # Give user time to view fnc output
+                    option_response(tabulate(ret, tablefmt = "rounded_grid"), ["Back to main menu"]) # Give user time to view fnc output
             except SystemExit: continue # Continue to function selection
 
     # --- SQL --- {{{
-    def _execute_query(self, db: DB, query_path: str, params: dict):
+    def _execute_query(self, db: DB, query_path: str, params: dict) -> list[tuple]:
         """Execute a query on a database.
         Inputs
         :param db: DB object to query
@@ -105,7 +105,7 @@ class App:
 
     # --- }}}
     # --- Register user {{{
-    def register_user(self, db: DB) -> int:
+    def register_user(self, db: DB) -> list[tuple] | None:
         """Let user register in the customer registry."""
         clear_screen()
 
@@ -126,11 +126,11 @@ class App:
             print(e)
             return None
 
-        return [[f"Successfully registered user {name}!"]]
+        return [(f"Successfully registered user {name}!",)]
 
     # --- }}}
     # --- Search routes between stops --- {{{
-    def seach_betwean_stops(self, db: DB, **kwargs):
+    def seach_betwean_stops(self, db: DB, **kwargs) -> list[tuple] | tuple[list[tuple], str, str] | None:
         """Search trainroutes between two stops
         -- Keyword Arguments:
             * ret_station: bool (return start and stop stations)
@@ -177,7 +177,7 @@ class App:
 
     # --- }}}
     # --- Purchase ticket --- {{{
-    def purachase_ticket(self, db: DB):
+    def purachase_ticket(self, db: DB) -> list[tuple] | None:
         """Let user purchase available tickets from desired train route."""
 
         while True:
@@ -224,7 +224,7 @@ class App:
                         # One bed reserves a whole coupe
                         for ticket in tickets.copy():
                             if ticket%2: tickets.append(ticket+1)
-                            else: tickets.appen(ticket-1)
+                            else: tickets.append(ticket-1)
 
                     # Select seat
                     options = np.arange(1, seats_per_row*n_rows+1)
@@ -276,7 +276,7 @@ class App:
             except TypeError: return None
             break # No exceptions! Break the loop
 
-        return [["Successfully booked seat(s):", *user_booking, f"With order id {order_id}"]]
+        return [("Successfully booked seat(s):", *user_booking, f"With order id {order_id}",)]
 
 
     # --- }}}

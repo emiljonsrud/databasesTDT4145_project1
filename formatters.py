@@ -1,12 +1,7 @@
 from __future__ import annotations # For python < 3.11
 
 from tabulate import tabulate
-from os import system
 import numpy as np
-
-def clear_screen():
-    """Clear the screan, this only works for UNIX systems"""
-    system("clear")
     
 def draw_car(n_compartments: int, n_rows: int, seats_per_row: int, reserved_seats: list[int]) -> str:
     """Formats information about a car into a nice table.
@@ -42,12 +37,12 @@ def draw_car(n_compartments: int, n_rows: int, seats_per_row: int, reserved_seat
         formatted_seats[i][1] = "".join(right_col)
     return tabulate(formatted_seats, tablefmt="rounded_grid", colalign=("center","center"))
 
-def format_car_options(table: list[tuple]):
+def format_car_options(table: list[tuple]) -> list[tuple]:
     '''Formats a (CarID, CarNo, NumOfRows, SeatsPerRow, NumOfCompartments)
         table into a list of ["CarNo  CarType"].
     '''
-    formatted_list = [""]*len(table)
+    formatted_list = []
     for i, row in enumerate(table):
         car_type = "Sleep car" if row[4] else "Chair car"
-        formatted_list[i] = f"{row[1]:>2} {car_type}"
+        formatted_list.append((f"{row[1]:>2}", car_type))
     return formatted_list
