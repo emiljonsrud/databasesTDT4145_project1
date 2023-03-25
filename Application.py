@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # --- Imports --- {{{
 from DB import DB
-from formatters import draw_car, format_car_options, clear_screen, tabulate
-from user_interface import option_response, varchar_response, int_response, datetime_response
+from formatters import draw_car, format_car_options, tabulate
+from user_interface import clear_screen, option_response, varchar_response, int_response, datetime_response
 
 from datetime import datetime
 import numpy as np
