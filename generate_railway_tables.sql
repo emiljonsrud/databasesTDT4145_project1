@@ -134,7 +134,7 @@ CREATE TABLE Customer(
   Email VARCHAR(255) NOT NULL, 
   PhoneNO INT NOT NULL
 );
-
+/*
 CREATE TABLE TicketOnSection( -- Ny entitet
   TicketNo INT NOT NULL,
   StartStation VARCHAR(255) NOT NULL, 
@@ -144,3 +144,4 @@ CREATE TABLE TicketOnSection( -- Ny entitet
   FOREIGN KEY(EndStation) REFERENCES TrackSubSection(EndsAt) ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT PK_TicketOnSection PRIMARY KEY (TicketNo, StartStation, EndStation)
 );
+*/
