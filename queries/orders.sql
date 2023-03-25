@@ -5,11 +5,14 @@ Input: customer_id
 -- TODO Only show FUTURE orders! need current time
 
 
-SELECT  DISTINCT C1.CustomerID, RS1.Station , 
-                 T1.EndStation, RS1.TimeOfDay, 
-                sub_query.TimeOfDay,
+SELECT  DISTINCT C1.CustomerID, 
+                 RS1.Station , 
+                 T1.EndStation, 
+                 RS1.TimeOfDay, 
+                 sub_query.TimeOfDay,
                  P.PlaceNo,
-                 CarInTrain.CarNo, TR1.Name
+                 CarInTrain.CarNo, 
+                 TR1.Name
 
 
 FROM Customer as C1 
@@ -54,5 +57,7 @@ FROM Customer as C1
         C1.CustomerID = :customer_id
         AND
         TO1.RunDate >=  DATE()
+
+      --  TO1.RunDate + ' ' +RS1.TimeOfDay + ':00'   >= DATE() + ' ' + TIME();
 
 
