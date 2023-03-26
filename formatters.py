@@ -44,5 +44,5 @@ def format_car_options(table: list[tuple]) -> list[tuple]:
     formatted_list = []
     for i, row in enumerate(table):
         car_type = "Sleep car" if row[4] else "Chair car"
-        formatted_list.append((f"{row[1]:>2}", car_type))
+        formatted_list.append((f"{row[1]:>2} {car_type}"))
     return formatted_list

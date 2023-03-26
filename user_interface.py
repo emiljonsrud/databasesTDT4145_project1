@@ -9,7 +9,6 @@ def clear_screen() -> None:
     system("clear")
     # system("cls")
 
-# --- User response --- {{{
 def option_response(msg: str, options: list, **kwargs) -> int | tuple[int]:
     """Get a users respons given a list of alternatives.
     Inputs
@@ -29,6 +28,8 @@ def option_response(msg: str, options: list, **kwargs) -> int | tuple[int]:
 
     if menu_entry_index == None:
         raise SystemExit
+    # elif isinstance(menu_entry_index, int):
+    #     menu_entry_index = (menu_entry_index, )
     return menu_entry_index
 
 def varchar_response(msg: str, min_len: int, max_len: int) -> str:
