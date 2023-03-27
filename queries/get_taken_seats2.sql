@@ -14,7 +14,6 @@ FROM TrainOccurance AS TOC
         ON T.NameOfRoute = TOC.NameOfRoute AND  T.RunDate = TOC.RunDate 
     INNER JOIN Ticket AS T2
         ON T2.NameOfRoute = TOC.NameOfRoute AND  T2.RunDate = TOC.RunDate 
-
     
     LEFT OUTER JOIN TrackSubSection AS TssTicketStart
         ON TssTicketStart.StartsAt = T.StartStation 
@@ -29,9 +28,24 @@ FROM TrainOccurance AS TOC
         
 
 WHERE 
-   (TR.SectionMainDirection = 1 AND TssTicketStart.SubSectionNo < TssQueryStart.SubSectionNo AND TssTicketEnd.SubSectionNo IS NULL)
-   OR
-    (TR.SectionMainDirection = 1 AND TssTicketStart.SubSectionNo < TssQueryStart.SubSectionNo AND TssTicketEnd.SubSectionNo > TssQueryStart.SubSectionNo)
+    (TR.SectionMainDirection = 1 AND TssTicketStart.SubSectionNo <= TssQueryStart.SubSectionNo AND TssTicketEnd.SubSectionNo IS NULL)
+    OR
+    (TR.SectionMainDirection = 1 AND TssTicketStart.SubSectionNo <= TssQueryStart.SubSectionNo AND TssTicketEnd.SubSectionNo >= TssQueryStart.SubSectionNo)
+    OR
+    (TR.SectionMainDirection = 1 AND TssTicketStart.SubSectionNo <= TssQueryEnd.SubSectionNo AND TssTicketEnd.SubSectionNo IS NULL)
+    OR
+    (TR.SectionMainDirection = 1 AND TssTicketStart.SubSectionNo <= TssQueryEnd.SubSectionNo AND TssTicketEnd.SubSectionNo >= TssQueryEnd.SubSectionNo)
+    OR
+    (TR.SectionMainDirection = 0 AND TssTicketStart.SubSectionNo IS NULL AND TssTicketEnd.SubSectionNo < TssQueryStart.SubSectionNo)
+     OR
+    (TR.SectionMainDirection = 0 AND TssTicketStart.SubSectionNo IS NULL AND TssQueryStart.SubSectionNo AND TssTicketEnd.SubSectionNo >= TssQueryStart.SubSectionNo)
+    OR
+    (TR.SectionMainDirection = 0 AND TssTicketStart.SubSectionNo <= TssQueryEnd.SubSectionNo AND TssTicketEnd.SubSectionNo IS NULL)
+    OR
+    (TR.SectionMainDirection = 0 AND TssTicketStart.SubSectionNo <= TssQueryEnd.SubSectionNo AND TssTicketEnd.SubSectionNo >= TssQueryEnd.SubSectionNo)
+   
+
+       
        -- OR (TssTicketStart.SubSectionNo < TssQueryEnd.SubSectionNo AND TssTicketEnd.SubSectionNo > TssQueryEnd.SubSectionNo))
     AND 
     T.RunDate = :run_date
