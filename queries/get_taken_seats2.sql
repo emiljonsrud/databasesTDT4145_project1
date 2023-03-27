@@ -6,26 +6,43 @@ Input:  run_date,
         end_station (the end-subsection-number for the booking end_station)
 */
 
-SELECT DISTINCT T.PlaceNo
-FROM Ticket AS T
+SELECT DISTINCT T.PlaceNo,  TssQueryStart.SubSectionNo, TssQueryEnd.SubSectionNo , TssTicketStart.SubSectionNo, TssTicketEnd.SubSectionNo
+FROM TrainOccurance AS TOC 
     INNER JOIN TrainRoute AS TR
-        ON T.NameOfRoute = TR.Name
-    INNER JOIN TrackSubSection AS TssTicketStart
-        ON T.StartStation = TssTicketStart.StartsAt
-    INNER JOIN TrackSubSection AS TssTicketEnd
-        ON T.EndStation = TssTicketEnd.EndsAt
-    INNER JOIN TrackSubSection AS TssQueryStart
-        ON TR.SectionName = TssQueryStart.SectionName
-        AND TssQueryStart.StartsAt = :start_station
-    INNER JOIN TrackSubSection AS TssQueryEnd
-        ON TR.SectionName = TssQueryEnd.SectionName
-        AND TssQueryEnd.StartsAt = :end_station
+       ON TR.Name = TOC.NameOfRoute
+    INNER JOIN Ticket AS T
+        ON T.NameOfRoute = TOC.NameOfRoute AND  T.RunDate = TOC.RunDate 
+    INNER JOIN Ticket AS T2
+        ON T2.NameOfRoute = TOC.NameOfRoute AND  T2.RunDate = TOC.RunDate 
 
-WHERE ((TssTicketStart.SubSectionNo < TssQueryStart.SubSectionNo AND TssTicketEnd.SubSectionNo > TssQueryStart.SubSectionNo)
-        OR (TssTicketStart.SubSectionNo < TssQueryEnd.SubSectionNo AND TssTicketEnd.SubSectionNo > TssQueryEnd.SubSectionNo))
-    AND T.RunDate = :run_date
+    
+    LEFT OUTER JOIN TrackSubSection AS TssTicketStart
+        ON TssTicketStart.StartsAt = T.StartStation 
+    LEFT OUTER JOIN TrackSubSection AS TssTicketEnd
+        ON TssTicketEnd.StartsAt = T.EndStation 
+
+    LEFT OUTER JOIN TrackSubSection AS TssQueryStart
+        ON TssQueryStart.StartsAt = T2.StartStation
+        
+    LEFT OUTER JOIN TrackSubSection AS TssQueryEnd
+        ON TssQueryEnd.StartsAt = T2.EndStation
+        
+
+WHERE 
+   (TR.SectionMainDirection = 1 AND TssTicketStart.SubSectionNo < TssQueryStart.SubSectionNo AND TssTicketEnd.SubSectionNo IS NULL)
+   OR
+    (TR.SectionMainDirection = 1 AND TssTicketStart.SubSectionNo < TssQueryStart.SubSectionNo AND TssTicketEnd.SubSectionNo > TssQueryStart.SubSectionNo)
+       -- OR (TssTicketStart.SubSectionNo < TssQueryEnd.SubSectionNo AND TssTicketEnd.SubSectionNo > TssQueryEnd.SubSectionNo))
+    AND 
+    T.RunDate = :run_date
+    AND
+    T2.RunDate = :run_date
     AND T.NameOfRoute = :name_of_route
     AND T.CarID = :car_id
+    AND T2.CarID = :car_id
+    AND TssQueryStart.StartsAt = :start_station
+    AND TssQueryEnd.StartsAt= :end_station;
+   -- AND TrainRoute.Name
 
 /*
 SELECT DISTINCT T.PlaceNo
