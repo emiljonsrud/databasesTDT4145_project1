@@ -1,4 +1,4 @@
-from __future__ import annotations # For python < 3.11
+from __future__ import annotations # For python < 3.10
 
 from tabulate import tabulate
 import numpy as np

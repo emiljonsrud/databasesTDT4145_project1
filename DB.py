@@ -1,11 +1,10 @@
-#!/usr/bin/python3
 # ---Imports---{{{
 import sqlite3
 
 # ---}}}
 
 class DB:
-    def __init__(self, db_name: str, tables: str = None, **kwargs):
+    def __init__(self, db_name: str, tables: str = "", **kwargs):
         """
         Object to interact with an sqlite3 instance
         
@@ -45,13 +44,6 @@ class DB:
     def __del__(self):
         """Close database connection"""
         self.con.close()
-
-    def __repr__(self):
-        query = """
-            SELECT name FROM sqlite_master
-                WHERE type='table';"""
-        self.cursor.execute(query)
-        return str(self.cursor.fetchall())
 
     # --- }}}
 

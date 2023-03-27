@@ -1,11 +1,11 @@
-#!/usr/bin/python3
 # --- Imports --- {{{
 from DB import DB
 from formatters import draw_car, format_car_options, tabulate
 from user_interface import clear_screen, option_response, varchar_response, int_response, datetime_response
 
 from datetime import datetime
-from typing import Callable
+from typing import Callable # For python < 3.10
+from os.path import isfile
 import numpy as np
 # --- }}}
 
@@ -22,15 +22,13 @@ class App:
             "View upcomming orders" : self.view_customer_orders
         }
         
-        # EDIT THIS if you want to keep values between sessions
-        erase = True
-        self.db = DB(db_name, erase=erase)
-        if erase:
-            self.db.run_sql_script("generate_railway_tables.sql")
-            self.db.run_sql_script("data/nordlandsbanen.sql")
-            self.db.run_sql_script("data/fill_trainroutes.sql")
-            self.db.run_sql_script("data/fill_customers.sql")
 
+        # Start with fresh db, or continue with previous session (default continue)
+        if kwargs.get("erase") or not isfile(db_name):
+            self.db = DB(db_name=db_name, tables="generate_railway_tables.sql", erase=True)
+            self._fill_tables()
+        else:
+            self.db = DB(db_name)
         self.clear_sets()
 
     def run(self) -> None:
@@ -61,7 +59,13 @@ class App:
                     option_response(tabulate(ret, headers="firstrow", tablefmt = "rounded_grid"), ["Back to main menu"]) # Give user time to view fnc output
             except SystemExit: continue # Continue to function selection
 
-    def _execute_query(self, db: DB, query_path: str, params: dict) -> list[tuple]:
+    def _fill_tables(self) -> None:
+        """Fill data in tables"""
+        self.db.run_sql_script("data/nordlandsbanen.sql")
+        self.db.run_sql_script("data/fill_trainroutes.sql")
+        self.db.run_sql_script("data/fill_customers.sql")
+    
+    def _execute_query(self, query_path: str, params: dict) -> list[tuple]:
         """Execute a query on a database.
         Inputs
         :param db: DB object to query
@@ -79,8 +83,8 @@ class App:
         with open(query_path, "r") as sql_file:
             query = sql_file.read()
 
-        db.cursor.execute(query, params)
-        return db.cursor.fetchall()
+        self.db.cursor.execute(query, params)
+        return self.db.cursor.fetchall()
     
     def _recursive_menu(self, i, selections: list[Callable]) -> None:
         """Recursivley enters menu selections. This is so that the user
@@ -136,7 +140,6 @@ class App:
             "time_": self._time
         }
         self._train_occurances = self._execute_query(
-            self.db, 
             "queries/routes_between_stations.sql", 
             params
         )
@@ -400,27 +403,6 @@ class App:
     # --- }}}
 
 if __name__=="__main__":
-    app = App("norwegian_rail.db")
-    # print(app._user_response(WeekDay))
-    # print(app._user_varchar_response(4, 255))
-
-    # db = DB("test.db")
-    # app._clear_screen()
-    # app.view_train_routes(db)
-    # app.register_user(db)
-    # app.seach_betwean_stops(db)
-    # app.purachase_ticket(db)
-
-    # app.run()
-
-    # Find reserved seats
-    params = {
-        "run_date" : "2023-04-03",
-        "name_of_route" : "Dagtog-Trondheim-Bodø",
-        "car_id" : 2000,
-        "start_station": "",
-        "end_station": "Fauske"
-    }
-    tickets = [ticket[0] for ticket in app._execute_query(app.db, "queries/get_taken_seats2.sql", params)]
-    print(tickets)
+    app = App("norwegian_rail.db", erase=True)
+    app.run()
 
