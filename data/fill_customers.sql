@@ -13,7 +13,7 @@ INSERT INTO CustomerOrder(OrderID, OrderDate, OrderTime, CustomerID)
 VALUES
   (1, '2023-02-02', '09:00', 1),
   (2, '2023-02-04', '08:00', 1),
-  (3, '2023-02-04', '00:01', 2);
+  (3, '2023-02-04', '00:01', 1);
 
  -- Test for 1 customer
 INSERT INTO Ticket(TicketNo, OrderID, CarID, PlaceNo, StartStation, EndStation, NameOfRoute, RunDate)
