@@ -6,108 +6,39 @@ Input:  run_date,
         end_station (the end-subsection-number for the booking end_station)
 */
 
-SELECT DISTINCT T.PlaceNo
-FROM Ticket AS T
-    INNER JOIN TrainRoute AS TR
-        ON T.NameOfRoute = TR.Name
-    INNER JOIN TrackSubSection AS TssTicketStart
-        ON T.StartStation = TssTicketStart.StartsAt
-    INNER JOIN TrackSubSection AS TssTicketEnd
-        ON T.EndStation = TssTicketEnd.EndsAt
-    INNER JOIN TrackSubSection AS TssQueryStart
-        ON TR.SectionName = TssQueryStart.SectionName
-        AND TssQueryStart.StartsAt = :start_station
-    INNER JOIN TrackSubSection AS TssQueryEnd
-        ON TR.SectionName = TssQueryEnd.SectionName
-        AND TssQueryEnd.StartsAt = :end_station
 
-WHERE ((TssTicketStart.SubSectionNo < TssQueryStart.SubSectionNo AND TssTicketEnd.SubSectionNo > TssQueryStart.SubSectionNo)
-        OR (TssTicketStart.SubSectionNo < TssQueryEnd.SubSectionNo AND TssTicketEnd.SubSectionNo > TssQueryEnd.SubSectionNo))
-    AND T.RunDate = :run_date
-    AND T.NameOfRoute = :name_of_route
-    AND T.CarID = :car_id
-
-/*
-SELECT DISTINCT T.PlaceNo
-    FROM Ticket AS T
-        INNER JOIN TrainRoute AS TR
-            ON T.NameOfRoute = TR.Name
-        LEFT OUTER JOIN TrackSubSection AS TssTicketStart
-            ON T.StartStation = TssTicketStart.StartsAt
-        LEFT OUTER JOIN TrackSubSection AS TssTicketEnd
-            ON T.EndStation = TssTicketEnd.StartsAt
-        INNER JOIN TrackSubSection AS TssQueryStart
-            ON  TR.SectionName = TssQueryStart.SectionName
-            AND ((TR.SectionMainDirection=1 AND TssQueryStart.StartsAt = :start_station)
-                OR (TR.SectionMainDirection=0 AND TssQueryStart.EndsAt = :start_station))
-        INNER JOIN TrackSubSection AS TssQueryEnd
-            ON  TR.SectionName = TssQueryEnd.SectionName
-            AND (TssQueryEnd.StartsAt = :end_station OR TssQueryEnd.EndsAt = :end_station)
-    WHERE (TssQueryStart.SubSectionNo BETWEEN TssTicketStart.SubSectionNo AND TssTicketEnd.SubSectionNo)
-        OR(TssQueryEnd.SubSectionNo BETWEEN TssTicketStart.SubSectionNo AND TssTicketEnd.SubSectionNo)
-
-        AND TR.Name = :name_of_route
-        AND T.CarID = :car_id
-        AND T.RunDate = :run_date;
-    /*
-    WHERE (TssTicketStart.SubSectionNo NOT BETWEEN TssQueryStart.SubSectionNo AND TssQueryEnd.SubSectionNo)
-            AND (TssTicketEnd.SubSectionNo NOT BETWEEN TssQueryStart.SubSectionNo AND TssQueryEnd.SubSectionNo);
-    */
-    /*
-    WHERE (TssTicketStart.SubSectionNo > min(TssQueryStart.SubSectionNo, TssQueryEnd.SubSectionNo)
-               AND TssTicketStart.SubSectionNo < max(TssQueryStart.SubSectionNo, TssQueryEnd.SubSectionNo))
-        OR (TssTicketEnd.SubSectionNo > min(TssQueryStart.SubSectionNo, TssQueryEnd.SubSectionNo)
-               AND TssTicketEnd.SubSectionNo < max(TssQueryStart.SubSectionNo, TssQueryEnd.SubSectionNo));
-    */
-        
-
-/*
-SELECT DISTINCT Ticket.PlaceNo
-FROM Ticket
-    INNER JOIN RouteStop AS RS1
-        ON Ticket.NameOfRoute = RS1.NameOfRoute
-    INNER JOIN RouteStop AS RS2
-        ON Ticket.NameOfRoute = RS2.NameOfRoute
-    INNER JOIN TrackSubSection AS TSS1
-        ON RS1.Station = TSS1.StartsAt
-           AND TSS1.StartsAt != :end_station
-           AND TSS1.EndsAt BETWEEN :start_station AND :end_station
-    INNER JOIN TrackSubSection AS TSS2
-        ON RS2.Station = TSS2.StartsAt
-           AND TSS2.StartsAt != :start_station
-           AND TSS2.EndsAt BETWEEN :start_station AND :end_station
+SELECT DISTINCT
+    T.PlaceNo,
+    TR.SectionMainDirection AS mainDir,
+    T.StartStation AS tStart,
+    T.EndStation AS tEnd
+FROM 
+    Ticket AS T
+    INNER JOIN TrainRoute AS TR ON T.NameOfRoute = TR.Name
+    INNER JOIN TrackSection AS TS ON TR.SectionName = TS.Name
+    -- All sections covered by a ticket
+    LEFT OUTER JOIN TrackSubSection AS eSec1 ON TR.SectionName = eSec1.SectionName
+        AND ((tStart = eSec1.StartsAt AND mainDir = 1)
+            OR (tStart = eSec1.EndsAt AND mainDir = 0))
+    LEFT OUTER JOIN TrackSubSection AS eSec2 ON TR.SectionName = eSec2.SectionName
+        AND ((tEnd = eSec2.EndsAt AND mainDir = 1)
+            OR (tEnd = eSec2.StartsAt AND mainDir = 0))
+    INNER JOIN TrackSubSection AS tCoveredSec ON TR.SectionName = tCoveredSec.SectionName
+        AND (tCoveredSec.SubSectionNo BETWEEN eSec1.SubSectionNo AND eSec2.SubSectionNo)
+        OR (tCoveredSec.SubSectionNo BETWEEN eSec2.SubSectionNo AND eSec1.SubSectionNo)
+    -- Sections covered by query
+    INNER JOIN TrainRoute AS qTR ON T.NameOfRoute = qTR.Name
+        AND qTR.Name = :name_of_route
+    LEFT OUTER JOIN TrackSubSection AS qSec1 ON TR.SectionName = qSec1.SectionName
+        AND ((:start_station = qSec1.StartsAt AND mainDir = 1)
+            OR (:start_station = qSec1.EndsAt AND mainDir = 0))
+    LEFT OUTER JOIN TrackSubSection AS qSec2 ON TR.SectionName = qSec2.SectionName
+        AND ((:end_station = qSec2.EndsAt AND mainDir = 1)
+            OR (:end_station = qSec2.StartsAt AND mainDir = 0))
+    INNER JOIN TrackSubSection AS qCoveredSec ON TR.SectionName = qCoveredSec.SectionName
+        AND (qCoveredSec.SubSectionNo BETWEEN qSec1.SubSectionNo AND qSec2.SubSectionNo)
+        OR (qCoveredSec.SubSectionNo BETWEEN qSec2.SubSectionNo AND qSec1.SubSectionNo)
 WHERE
-    Ticket.NameOfRoute = :name_of_route
-    AND Ticket.RunDate = :run_date
-    AND Ticket.CarID = :car_id
-    AND RS1.Station = :start_station
-    AND RS2.Station = :end_station
-    AND TSS1.SubSectionNo <= TSS2.SubSectionNo
-    AND Ticket.PlaceNo NOT IN (
-        SELECT DISTINCT Ticket.PlaceNo
-        FROM Ticket
-            INNER JOIN RouteStop AS RS1
-                ON Ticket.NameOfRoute = RS1.NameOfRoute
-            INNER JOIN RouteStop AS RS2
-                ON Ticket.NameOfRoute = RS2.NameOfRoute
-            INNER JOIN TrackSubSection AS TSS1
-                ON RS1.Station = TSS1.StartsAt
-                   AND TSS1.StartsAt != :end_station
-                   AND TSS1.EndsAt BETWEEN :start_station AND :end_station
-            INNER JOIN TrackSubSection AS TSS2
-                ON RS2.Station = TSS2.StartsAt
-                   AND TSS2.StartsAt != :start_station
-                   AND TSS2.EndsAt BETWEEN :start_station AND :end_station
-        WHERE
-            Ticket.NameOfRoute = :name_of_route
-            AND Ticket.RunDate = :run_date
-            AND Ticket.CarID = :car_id
-            AND RS1.Station = :start_station
-            AND RS2.Station = :end_station
-            AND TSS1.SubSectionNo <= TSS2.SubSectionNo
-            AND (
-                TSS1.EndsAt = :end_station
-                OR TSS2.StartsAt = :start_station
-            )
-    );
-*/
+    qCoveredSec.SubSectionNo = tCoveredSec.SubSectionNo
+    AND T.RunDate = :run_date
+    AND T.CarID = :car_id
