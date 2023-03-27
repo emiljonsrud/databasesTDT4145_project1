@@ -18,7 +18,7 @@ VALUES
  -- Test for 1 customer
 INSERT INTO Ticket(TicketNo, OrderID, CarID, PlaceNo, StartStation, EndStation, NameOfRoute, RunDate)
 VALUES
-  (1, 1, 2000, 2, "Fauske", "Steinkjer", "Morgentog-Mo_i_Rana-Trondheim",'2023-04-03' ),
+  (1, 1, 2000, 2, "Mo i Rana", "Steinkjer", "Morgentog-Mo_i_Rana-Trondheim",'2023-04-03' ),
   (2, 2, 2000, 12, "Mosjøen", "Mo i Rana", "Dagtog-Trondheim-Bodø", '2023-04-03'),
   (3, 2, 2000, 9, "Mosjøen", "Mo i Rana", "Dagtog-Trondheim-Bodø", '2023-04-03'),
   (4, 2, 2000, 10, "Mosjøen", "Mo i Rana", "Dagtog-Trondheim-Bodø", '2023-04-03'),

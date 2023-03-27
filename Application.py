@@ -139,10 +139,7 @@ class App:
             "date_": self._date,
             "time_": self._time
         }
-        self._train_occurances = self._execute_query(
-            "queries/routes_between_stations.sql", 
-            params
-        )
+        self._train_occurances = self._execute_query("queries/routes_between_stations.sql", params)
 
     # --- }}}
     # --- Setters {{{
@@ -213,7 +210,7 @@ class App:
         if not self._train_occurance:
             raise RuntimeError("Select a train occurance first")
 
-        cars = self._execute_query(self.db, "queries/get_cars.sql", {"train_route":self._train_occurance[0]})
+        cars = self._execute_query("queries/get_cars.sql", {"train_route":self._train_occurance[0]})
         options = format_car_options(cars)
         self._car = cars[option_response("Select a car. (Car number, Car type)", options)]
 
@@ -234,7 +231,7 @@ class App:
             "start_station": self._start_station, 
             "end_station": self._end_station
         }
-        tickets = [ticket[0] for ticket in self._execute_query(self.db, "queries/get_taken_seats2.sql", params)]
+        tickets = [ticket[0] for ticket in self._execute_query("queries/get_taken_seats2.sql", params)]
         print(tickets)
 
         # Check if sleep car
@@ -277,7 +274,7 @@ class App:
             "station" : self.get_station("Select a railway station")
         }
         # Get table of rows that match the query
-        table = self._execute_query(self.db, "queries/route_on_day.sql", params)
+        table = self._execute_query("queries/route_on_day.sql", params)
         return table
 
     # --- }}}
@@ -322,7 +319,7 @@ class App:
             "date_" : self._date,
             "time_" : self._time
         }
-        table = self._execute_query(self.db, "queries/routes_between_stations.sql", params)
+        table = self._execute_query("queries/routes_between_stations.sql", params)
         self.clear_sets()
 
         headers = ("Route", "Date", "Start", "Departure", "End", "Arrival")
@@ -394,7 +391,7 @@ class App:
     def view_customer_orders(self) -> list[tuple]:
         """View custmer orders"""
         customer_id = int_response("Write your customer ID", 1, 4)
-        orders = self._execute_query(self.db, "queries/orders.sql", {"customer_id":customer_id})
+        orders = self._execute_query("queries/orders.sql", {"customer_id":customer_id})
 
         headers = ("Date", "Start", "End", "Departure", "Arrival", "Seat", "Car", "Route")
         orders.insert(0, headers)

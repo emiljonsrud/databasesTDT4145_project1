@@ -21,6 +21,7 @@ def option_response(msg: str, options: list, **kwargs) -> int | tuple[int]:
     :out: one element in options
     Raises SystemExit if user wants to exit.
     """
+    clear_screen()
     options = list(map(str, options)).copy()
 
     terminal_menu = TerminalMenu(options, title=msg, **kwargs)
@@ -42,7 +43,7 @@ def varchar_response(msg: str, min_len: int, max_len: int) -> str:
     -- Out
     :response: string containing user response.
     """
-    msg += "\n~> "
+    msg += "(press ctrl+c to escape)\n~> "
     feedback = ""
 
     while True:
@@ -80,7 +81,7 @@ def int_response(msg: str, min_len, max_len) -> int:
     -- Out
     :response: string containing user response.
     """
-    msg += "\n~> "
+    msg += "(press ctrl+c to escape)\n~> "
     feedback = ""
 
     while True:
