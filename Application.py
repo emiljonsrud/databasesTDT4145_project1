@@ -21,7 +21,16 @@ class App:
             "Purchase a ticket" : self.purachase_ticket,
             "View upcomming orders" : self.view_customer_orders
         }
-        self.db = DB(db_name)
+        
+        # EDIT THIS if you want to keep values between sessions
+        erase = True
+        self.db = DB(db_name, erase=erase)
+        if erase:
+            self.db.run_sql_script("generate_railway_tables.sql")
+            self.db.run_sql_script("data/nordlandsbanen.sql")
+            self.db.run_sql_script("data/fill_trainroutes.sql")
+            self.db.run_sql_script("data/fill_customers.sql")
+
         self.clear_sets()
 
     def run(self) -> None:
@@ -190,7 +199,7 @@ class App:
     def set_train_occurance(self):
         """Set current selected train occurance. Need to have time, date, start-, end-station"""
         self.update_train_occurances()
-        assert self._train_occurances
+        # assert self._train_occurances
         options = ["  ".join(route) for route in self._train_occurances] # join train-occ info
         self._train_occurance = self._train_occurances[option_response("Select a desired route", options)]
 
@@ -219,10 +228,11 @@ class App:
             "run_date" : self._date,
             "name_of_route" : route_name,
             "car_id" : car_id,
-            "start_station": self._end_station, 
-            "end_station": self._start_station
+            "start_station": self._start_station, 
+            "end_station": self._end_station
         }
-        tickets = [ticket[0] for ticket in self._execute_query(self.db, "queries/get_taken_seats.sql", params)]
+        tickets = [ticket[0] for ticket in self._execute_query(self.db, "queries/get_taken_seats2.sql", params)]
+        print(tickets)
 
         # Check if sleep car
         if n_compartments:
@@ -378,19 +388,19 @@ class App:
 
     # --- }}}
     # --- View customer orders --- {{{
-    def view_customer_orders(self, db: DB):
+    def view_customer_orders(self) -> list[tuple]:
         """View custmer orders"""
         customer_id = int_response("Write your customer ID", 1, 4)
-        orders = self._execute_query(db, "queries/orders.sql", {"customer_id":customer_id})
+        orders = self._execute_query(self.db, "queries/orders.sql", {"customer_id":customer_id})
 
-        headers = ("Start", "End", "Departure", "Arrival", "Seat", "Car", "Route")
+        headers = ("Date", "Start", "End", "Departure", "Arrival", "Seat", "Car", "Route")
         orders.insert(0, headers)
         return orders
 
     # --- }}}
 
 if __name__=="__main__":
-    app = App("test.db")
+    app = App("norwegian_rail.db")
     # print(app._user_response(WeekDay))
     # print(app._user_varchar_response(4, 255))
 
@@ -401,7 +411,16 @@ if __name__=="__main__":
     # app.seach_betwean_stops(db)
     # app.purachase_ticket(db)
 
-    app.run()
+    # app.run()
 
-
+    # Find reserved seats
+    params = {
+        "run_date" : "2023-04-03",
+        "name_of_route" : "Dagtog-Trondheim-Bodø",
+        "car_id" : 2000,
+        "start_station": "",
+        "end_station": "Fauske"
+    }
+    tickets = [ticket[0] for ticket in app._execute_query(app.db, "queries/get_taken_seats2.sql", params)]
+    print(tickets)
 

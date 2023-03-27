@@ -1,9 +1,9 @@
 #/usr/bin/python3
+from Application import App
 
 def main() -> None:
-    pass
-
-
+    app = App("norwegian_rail.db", erase=True)
+    app.run()
 
 if __name__=="__main__":
     main()
