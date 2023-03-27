@@ -320,6 +320,8 @@ class App:
             "time_" : self._time
         }
         table = self._execute_query("queries/routes_between_stations.sql", params)
+        if not table:
+            return [("No routes between (start)", "(end)"),(self._start_station, self._end_station)]
         self.clear_sets()
 
         headers = ("Route", "Date", "Start", "Departure", "End", "Arrival")

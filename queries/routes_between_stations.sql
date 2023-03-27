@@ -23,8 +23,9 @@ WHERE
     RS1.Station = :start_station AND RS2.Station = :end_station 
     AND (     
         (TR.SectionMainDirection = 1  AND TSS1.SubSectionNo < TSS2.SubSectionNo) 
+        OR (TR.SectionMainDirection = 1  AND TSS2.SubSectionNo IS NULL) 
         OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo > TSS2.SubSectionNo)
-        OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo = NULL)
+        OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo IS NULL)
     ) 
     AND TOc.RunDate = :date_
     AND RS1.TimeOfDay >= :time_
@@ -47,8 +48,9 @@ WHERE
     RS1.Station = :start_station AND RS2.Station = :end_station AND
     (     
     ( TR.SectionMainDirection = 1  AND TSS1.SubSectionNo < TSS2.SubSectionNo) 
-     OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo > TSS2.SubSectionNo)
-     OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo = NULL)
+    OR (TR.SectionMainDirection = 1  AND TSS2.SubSectionNo IS NULL) 
+    OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo > TSS2.SubSectionNo)
+    OR (TR.SectionMainDirection = 0 AND TSS1.SubSectionNo IS NULL)
     ) 
     AND TOc.RunDate = (SELECT DATE(:date_, '+1 day'))
     ORDER BY TOc.Rundate ASC, RS1.TimeOfDay ASC;
