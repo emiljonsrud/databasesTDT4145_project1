@@ -393,7 +393,7 @@ class App:
         customer_id = int_response("Write your customer ID", 1, 4)
         orders = self._execute_query("queries/orders.sql", {"customer_id":customer_id})
 
-        headers = ("Date", "Start", "End", "Departure", "Arrival", "Seat", "Car", "Route")
+        headers = ("Date", "Route", "Carrige No.", "Place No.", "From", "To", "Departure", "Arrival")
         orders.insert(0, headers)
         return orders
 

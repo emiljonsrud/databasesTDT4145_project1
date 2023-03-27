@@ -2,7 +2,15 @@
 Input: customer_id
 */
 
-SELECT DISTINCT TrainRoute.Name, T1.RunDate, CarInTrain.CarNo, T1.PlaceNo, RS1.Station, RS2.Station,  RS1.TimeOfDay, RS2.TimeOfDay
+SELECT DISTINCT 
+    T1.RunDate, 
+    TrainRoute.Name, 
+    CarInTrain.CarNo, 
+    T1.PlaceNo, 
+    RS1.Station, 
+    RS2.Station, 
+    RS1.TimeOfDay, 
+    RS2.TimeOfDay
 FROM CustomerOrder 
     INNER JOIN Ticket AS T1
         ON (CustomerOrder.OrderID = T1.OrderID)

@@ -77,7 +77,7 @@ VALUES
 INSERT INTO CarInTrain(CarID, CarNo, NameOfRoute)
 VALUES
     (2000, 1, "Dagtog-Trondheim-Bodø"),
-    (2001, 2, "Dagtog-Trondheim-Bodø"),
+    (2005, 2, "Dagtog-Trondheim-Bodø"),
     (2002, 1, "Nattog-Trondheim-Bodø"),
     (2003, 2, "Nattog-Trondheim-Bodø"),
     (2004, 1, "Morgentog-Mo_i_Rana-Trondheim");
@@ -87,6 +87,7 @@ INSERT INTO ChairCar(CarID, NumOfRows, SeatsPerRow)
 VALUES
     (2000, 3, 4),
     (2002, 3, 4),
+    (2005, 3, 4),
     (2004, 3, 4);
 
 INSERT INTO SleepCar(CarID, NumOfCompartments)
