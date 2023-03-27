@@ -16,6 +16,7 @@ FROM
     Ticket AS T
     INNER JOIN TrainRoute AS TR ON T.NameOfRoute = TR.Name
     INNER JOIN TrackSection AS TS ON TR.SectionName = TS.Name
+    LEFT OUTER JOIN SleepCar ON SleepCar.CarID = T.CarID
     -- All sections covered by a ticket
     LEFT OUTER JOIN TrackSubSection AS eSec1 ON TR.SectionName = eSec1.SectionName
         AND ((tStart = eSec1.StartsAt AND mainDir = 1)
@@ -26,6 +27,7 @@ FROM
     INNER JOIN TrackSubSection AS tCoveredSec ON TR.SectionName = tCoveredSec.SectionName
         AND (tCoveredSec.SubSectionNo BETWEEN eSec1.SubSectionNo AND eSec2.SubSectionNo)
         OR (tCoveredSec.SubSectionNo BETWEEN eSec2.SubSectionNo AND eSec1.SubSectionNo)
+        OR (SleepCar.CarID IS NOT NULL) -- Ticket is sleep-car => whole section is booked
     -- Sections covered by query
     INNER JOIN TrainRoute AS qTR ON T.NameOfRoute = qTR.Name
         AND qTR.Name = :name_of_route
